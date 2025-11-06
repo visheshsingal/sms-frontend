@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --primary: #1E3A8A;
+  --accent: #06B6D4;
+  --ui-text: #111827;
+}
+
+body{font-family:Inter, ui-sans-serif, system-ui; background:#fff; color:var(--ui-text)}
+
+.card{background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(16,24,40,0.06);}
