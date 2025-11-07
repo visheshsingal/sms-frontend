@@ -93,6 +93,15 @@ const Attendance = () => {
   const attendancePercentage =
     students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0;
 
+  // Static Tailwind classes mapped by semantic color names.
+  // Avoid dynamic template strings so Tailwind can generate required classes.
+  const colorClassMap = {
+    blue: 'bg-gradient-to-br from-blue-500 to-blue-600 text-white',
+    green: 'bg-gradient-to-br from-green-500 to-green-600 text-white',
+    red: 'bg-gradient-to-br from-red-500 to-red-600 text-white',
+    purple: 'bg-gradient-to-br from-purple-500 to-purple-600 text-white'
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
@@ -164,7 +173,7 @@ const Attendance = () => {
               ].map((card, idx) => (
                 <div
                   key={idx}
-                  className={`bg-gradient-to-br from-${card.color}-500 to-${card.color}-600 rounded-xl text-white p-5 shadow-md hover:shadow-lg transition-transform duration-200 hover:-translate-y-1`}
+                  className={`${colorClassMap[card.color]} rounded-xl p-5 shadow-md hover:shadow-lg transition-transform duration-200 hover:-translate-y-1`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-medium opacity-90">{card.label}</p>
@@ -220,10 +229,11 @@ const Attendance = () => {
                           <div className="flex gap-3">
                             {['present', 'absent'].map(type => {
                               const isActive = status === type;
-                              const color =
+                              // Use explicit class strings so Tailwind can detect them
+                              const activeClass =
                                 type === 'present'
-                                  ? 'green'
-                                  : 'red';
+                                  ? 'bg-green-100 text-green-700 border-green-500'
+                                  : 'bg-red-100 text-red-700 border-red-500';
                               return (
                                 <button
                                   key={type}
@@ -231,7 +241,7 @@ const Attendance = () => {
                                   onClick={() => handleStatusChange(student._id, type)}
                                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm border-2 transition-all duration-200 ${
                                     isActive
-                                      ? `bg-${color}-100 text-${color}-700 border-${color}-500`
+                                      ? activeClass
                                       : 'bg-gray-100 text-gray-600 border-transparent hover:bg-gray-200'
                                   }`}
                                 >
