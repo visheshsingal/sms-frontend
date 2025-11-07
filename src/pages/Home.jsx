@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Users, BookOpen, Rocket, Monitor, Menu, X, ChevronDown, Mail, Phone, MapPin, Check, Zap, Shield, TrendingUp, Clock, Award, Globe } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, Rocket, Monitor, Mail, Phone, MapPin, Check, Zap, Shield, TrendingUp, Clock, Award, Globe, Bus } from 'lucide-react';
 
 const App = () => {
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
+    // Navigation handled by global NavBar component
 
     const BACKGROUND_IMAGE_URL = 'https://images.pexels.com/photos/1720188/pexels-photo-1720188.jpeg';
 
@@ -18,90 +17,7 @@ const App = () => {
     return (
         <div className="min-h-screen bg-white font-sans">
             
-            {/* Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md shadow-md z-50 border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex justify-between items-center">
-                        {/* Logo */}
-                        <div className="flex items-center space-x-2">
-                            <Monitor className="w-8 h-8 text-indigo-600" />
-                            <span className="text-2xl font-bold text-slate-800">School Management</span>
-                        </div>
-
-                        {/* Desktop Menu */}
-                        <div className="hidden md:flex items-center space-x-8">
-                            <button onClick={() => scrollToSection('home')} className="text-gray-700 hover:text-indigo-600 font-medium transition-colors duration-200">Home</button>
-                            <button onClick={() => scrollToSection('about')} className="text-gray-700 hover:text-indigo-600 font-medium transition-colors duration-200">About Us</button>
-                            <button onClick={() => scrollToSection('features')} className="text-gray-700 hover:text-indigo-600 font-medium transition-colors duration-200">Features</button>
-                            <button onClick={() => scrollToSection('pricing')} className="text-gray-700 hover:text-indigo-600 font-medium transition-colors duration-200">Pricing</button>
-                            <button onClick={() => scrollToSection('contact')} className="text-gray-700 hover:text-indigo-600 font-medium transition-colors duration-200">Contact</button>
-                            <button onClick={() => scrollToSection('support')} className="text-gray-700 hover:text-indigo-600 font-medium transition-colors duration-200">Support</button>
-                            
-                            {/* Login Dropdown */}
-                            <div className="relative">
-                                <button 
-                                    onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
-                                    className="bg-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-indigo-700 transition-all duration-300 flex items-center space-x-2"
-                                >
-                                    <span>Login</span>
-                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${loginDropdownOpen ? 'rotate-180' : ''}`} />
-                                </button>
-                                
-                                {loginDropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 animate-fade-in">
-                                        <a href="/admin" className="flex items-center px-4 py-3 hover:bg-indigo-50 transition-colors duration-200">
-                                            <LayoutDashboard className="w-5 h-5 text-indigo-600 mr-3" />
-                                            <span className="text-gray-700 font-medium">Admin Portal</span>
-                                        </a>
-                                        <a href="/teacher" className="flex items-center px-4 py-3 hover:bg-indigo-50 transition-colors duration-200">
-                                            <BookOpen className="w-5 h-5 text-green-600 mr-3" />
-                                            <span className="text-gray-700 font-medium">Teacher Portal</span>
-                                        </a>
-                                        <a href="/student" className="flex items-center px-4 py-3 hover:bg-indigo-50 transition-colors duration-200">
-                                            <Users className="w-5 h-5 text-blue-600 mr-3" />
-                                            <span className="text-gray-700 font-medium">Student Portal</span>
-                                        </a>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Mobile Menu Button */}
-                        <button 
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden text-gray-700"
-                        >
-                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                        </button>
-                    </div>
-
-                    {/* Mobile Menu */}
-                    {mobileMenuOpen && (
-                        <div className="md:hidden mt-4 pb-4 space-y-3 animate-fade-in">
-                            <button onClick={() => scrollToSection('home')} className="block w-full text-left text-gray-700 hover:text-indigo-600 font-medium py-2">Home</button>
-                            <button onClick={() => scrollToSection('about')} className="block w-full text-left text-gray-700 hover:text-indigo-600 font-medium py-2">About Us</button>
-                            <button onClick={() => scrollToSection('features')} className="block w-full text-left text-gray-700 hover:text-indigo-600 font-medium py-2">Features</button>
-                            <button onClick={() => scrollToSection('pricing')} className="block w-full text-left text-gray-700 hover:text-indigo-600 font-medium py-2">Pricing</button>
-                            <button onClick={() => scrollToSection('contact')} className="block w-full text-left text-gray-700 hover:text-indigo-600 font-medium py-2">Contact</button>
-                            <button onClick={() => scrollToSection('support')} className="block w-full text-left text-gray-700 hover:text-indigo-600 font-medium py-2">Support</button>
-                            <div className="pt-3 border-t border-gray-200 space-y-2">
-                                <a href="/admin" className="flex items-center text-gray-700 hover:text-indigo-600 py-2">
-                                    <LayoutDashboard className="w-5 h-5 mr-2" />
-                                    Admin Login
-                                </a>
-                                <a href="/teacher" className="flex items-center text-gray-700 hover:text-indigo-600 py-2">
-                                    <BookOpen className="w-5 h-5 mr-2" />
-                                    Teacher Login
-                                </a>
-                                <a href="/student" className="flex items-center text-gray-700 hover:text-indigo-600 py-2">
-                                    <Users className="w-5 h-5 mr-2" />
-                                    Student Login
-                                </a>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </nav>
+            {/* Global NavBar is already rendered by App.jsx; removing local navbar */}
 
             {/* Hero Section */}
             <section 
@@ -303,85 +219,7 @@ const App = () => {
                 </div>
             </section>
 
-            {/* Pricing Section */}
-            <section id="pricing" className="py-24 bg-white">
-                <div className="max-w-6xl mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">Simple, Transparent Pricing</h2>
-                        <div className="w-24 h-1 bg-indigo-600 mx-auto mb-6"></div>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            Choose the plan that fits your institution's needs. All plans include core features.
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {/* Basic Plan */}
-                        <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 hover:shadow-xl">
-                            <div className="text-center mb-6">
-                                <h3 className="text-2xl font-bold text-slate-800 mb-2">Basic</h3>
-                                <p className="text-gray-600 mb-4">For small schools</p>
-                                <div className="text-5xl font-bold text-slate-800 mb-2">$99</div>
-                                <div className="text-gray-600">per month</div>
-                            </div>
-                            <ul className="space-y-3 mb-8">
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">Up to 200 students</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">10 teacher accounts</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">Basic reporting</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">Email support</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">Mobile app access</span></li>
-                            </ul>
-                            <button className="w-full bg-gray-100 text-slate-800 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors duration-300">
-                                Get Started
-                            </button>
-                        </div>
-
-                        {/* Professional Plan */}
-                        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-8 transform scale-105 shadow-2xl relative">
-                            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-slate-900 px-4 py-1 rounded-full text-sm font-bold">
-                                POPULAR
-                            </div>
-                            <div className="text-center mb-6 text-white">
-                                <h3 className="text-2xl font-bold mb-2">Professional</h3>
-                                <p className="text-indigo-200 mb-4">For growing schools</p>
-                                <div className="text-5xl font-bold mb-2">$249</div>
-                                <div className="text-indigo-200">per month</div>
-                            </div>
-                            <ul className="space-y-3 mb-8 text-white">
-                                <li className="flex items-start"><Check className="w-5 h-5 text-yellow-400 mr-3 mt-0.5" /><span>Up to 1000 students</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-yellow-400 mr-3 mt-0.5" /><span>50 teacher accounts</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-yellow-400 mr-3 mt-0.5" /><span>Advanced analytics</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-yellow-400 mr-3 mt-0.5" /><span>Priority support</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-yellow-400 mr-3 mt-0.5" /><span>Custom branding</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-yellow-400 mr-3 mt-0.5" /><span>API access</span></li>
-                            </ul>
-                            <button className="w-full bg-white text-indigo-600 py-3 rounded-full font-bold hover:bg-yellow-400 hover:text-slate-900 transition-colors duration-300">
-                                Get Started
-                            </button>
-                        </div>
-
-                        {/* Enterprise Plan */}
-                        <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 hover:shadow-xl">
-                            <div className="text-center mb-6">
-                                <h3 className="text-2xl font-bold text-slate-800 mb-2">Enterprise</h3>
-                                <p className="text-gray-600 mb-4">For large institutions</p>
-                                <div className="text-5xl font-bold text-slate-800 mb-2">Custom</div>
-                                <div className="text-gray-600">contact us</div>
-                            </div>
-                            <ul className="space-y-3 mb-8">
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">Unlimited students</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">Unlimited teachers</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">Custom features</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">24/7 phone support</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">Dedicated account manager</span></li>
-                                <li className="flex items-start"><Check className="w-5 h-5 text-green-500 mr-3 mt-0.5" /><span className="text-gray-700">On-premise deployment</span></li>
-                            </ul>
-                            <button className="w-full bg-gray-100 text-slate-800 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors duration-300">
-                                Contact Sales
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            {/* Pricing section removed per request */}
 
             {/* Contact Section */}
             <section id="contact" className="py-24 bg-gradient-to-b from-gray-50 to-white">

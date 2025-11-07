@@ -9,17 +9,29 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminLayout from './layouts/AdminLayout'
 import Students from './pages/Students'
 import Teachers from './pages/Teachers'
+import Drivers from './pages/Drivers'
+import Buses from './pages/Buses'
 import Finance from './pages/Finance'
 import Classes from './pages/Classes'
+import RoutesPage from './pages/Routes'
 import StudentAuth from './pages/StudentAuth'
+import DriverAuth from './pages/DriverAuth'
+import DriverLayout from './layouts/DriverLayout'
+import DriverDashboard from './pages/DriverDashboard'
+import DriverProfile from './pages/DriverProfile'
+import DriverRoute from './pages/DriverRoute'
+import LiveTrackingDriver from './pages/LiveTrackingDriver'
 import StudentLayout from './layouts/StudentLayout'
 import StudentProfile from './pages/student/Profile'
+import StudentTransport from './pages/student/Transport'
 import StudentAttendanceReport from './pages/student/AttendanceReport'
 import StudentProgress from './pages/student/Progress'
 import StudentLeaves from './pages/student/Leaves'
 import StudentAssignments from './pages/student/Assignments'
 import StudentTimetable from './pages/student/Timetable'
 import Notices from './pages/Notices.jsx'
+import LiveTrackingAdmin from './pages/LiveTrackingAdmin'
+import LiveTrackingStudent from './pages/LiveTrackingStudent'
 import TeacherAuth from './pages/TeacherAuth'
 import TeacherDashboard from './pages/TeacherDashboard'
 import TeacherLayout from './layouts/TeacherLayout'
@@ -47,16 +59,30 @@ export default function App(){
           <Route path='dashboard' element={<AdminDashboard/>} />
           <Route path='students' element={<Students/>} />
           <Route path='teachers' element={<Teachers/>} />
+          <Route path='drivers' element={<Drivers/>} />
           <Route path='classes' element={<Classes/>} />
+          <Route path='buses' element={<Buses/>} />
+          <Route path='routes' element={<RoutesPage/>} />
           <Route path='finance' element={<Finance/>} />
           <Route path='attendance' element={<Attendance/>} />
           <Route path='attendance-report' element={<AttendanceReport/>} />
           <Route path='notices' element={<Notices/>} />
+          <Route path='live' element={<LiveTrackingAdmin/>} />
         </Route>
 
         <Route path='/student' element={<StudentAuth/>} />
+        <Route path='/driver' element={<DriverAuth/>} />
+        <Route path='/driver/*' element={<DriverLayout/>}>
+          <Route path='dashboard' element={<DriverDashboard/>} />
+          <Route path='live' element={<LiveTrackingDriver/>} />
+          <Route path='profile' element={<DriverProfile/>} />
+          <Route path='route' element={<DriverRoute/>} />
+          <Route path='notices' element={<Notices/>} />
+        </Route>
         <Route path='/student/*' element={<StudentLayout/>}>
           <Route path='profile' element={<StudentProfile/>} />
+          <Route path='live' element={<LiveTrackingStudent/>} />
+          <Route path='transport' element={<StudentTransport/>} />
           <Route path='attendance-report' element={<StudentAttendanceReport/>} />
           <Route path='progress' element={<StudentProgress/>} />
           <Route path='leaves' element={<StudentLeaves/>} />
@@ -71,6 +97,7 @@ export default function App(){
           <Route path='attendance' element={<TeacherAttendance/>} />
           <Route path='assignments' element={<TeacherAssignments/>} />
           <Route path='timetable' element={<TeacherTimetable/>} />
+          <Route path='notices' element={<Notices/>} />
           <Route path='progress' element={<TeacherProgress/>} />
           <Route path='leaves' element={<TeacherLeaves/>} />
           <Route path='progress/:studentId/report' element={<StudentProgressReport/>} />

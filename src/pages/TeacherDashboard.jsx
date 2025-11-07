@@ -6,6 +6,7 @@ import { User, BookOpen, ClipboardList, CalendarDays, Users, BarChart2 } from 'l
 export default function TeacherDashboard() {
   const [teacher, setTeacher] = useState(null)
   const [assignedClass, setAssignedClass] = useState(null)
+  const [teachingClasses, setTeachingClasses] = useState([])
 
   useEffect(() => {
     const load = async () => {
@@ -16,11 +17,24 @@ export default function TeacherDashboard() {
         ])
         setTeacher(pRes.data)
         setAssignedClass(cRes.data || null)
+        // teachingClasses loaded in separate effect
       } catch (err) {
         console.error('Error loading teacher data', err?.response?.data || err.message)
       }
     }
     load()
+  }, [])
+
+  useEffect(() => {
+    const loadTeaching = async () => {
+      try {
+        const res = await API.get('/teacher/teaching-classes')
+        setTeachingClasses(res.data || [])
+      } catch (err) {
+        console.error('Error loading teaching classes', err?.response?.data || err.message)
+      }
+    }
+    loadTeaching()
   }, [])
 
   return (
@@ -43,6 +57,24 @@ export default function TeacherDashboard() {
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Classes I Teach Card */}
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-all duration-300">
+            <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-3">
+              <BookOpen className="w-5 h-5 text-indigo-600" /> Classes I Teach
+            </h4>
+            {teachingClasses && teachingClasses.length ? (
+              <div className="space-y-3">
+                {teachingClasses.map(cls => (
+                  <div key={cls._id} className="p-3 bg-gray-50 rounded">
+                    <div className="font-medium text-gray-900">{cls.name}</div>
+                    <div className="text-sm text-gray-600">Subjects: {cls.subjects.map(s => s.name).join(', ')}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 italic">You are not assigned to teach any subjects yet.</div>
+            )}
+          </div>
           {/* Assigned Class Card */}
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-all duration-300">
             <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-3">

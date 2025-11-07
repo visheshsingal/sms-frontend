@@ -10,9 +10,10 @@ import {
   BarChart3,
   FileText,
   Bell,
+  X,
 } from 'lucide-react'
 
-export default function TeacherSidebar() {
+export default function TeacherSidebar({ className = '', onClose }) {
   const [assignedClass, setAssignedClass] = useState(null)
 
   useEffect(() => {
@@ -39,13 +40,25 @@ export default function TeacherSidebar() {
     { to: '/teacher/timetable', label: 'Timetable', icon: Calendar },
     { to: '/teacher/progress', label: 'Student Progress', icon: BarChart3 },
     { to: '/teacher/leaves', label: 'Leaves', icon: FileText },
-    { to: '/notices', label: 'Notices', icon: Bell },
+  { to: '/teacher/notices', label: 'Notices', icon: Bell },
   ]
 
   return (
-    <aside className="w-64 min-h-screen bg-gradient-to-b from-indigo-700 to-indigo-800 text-indigo-50 px-5 py-6 shadow-xl">
+    <aside
+      className={`relative flex min-h-screen w-64 flex-col overflow-y-auto bg-gradient-to-b from-indigo-700 to-indigo-800 px-5 py-6 text-indigo-50 shadow-xl ${className}`}
+    >
+      {onClose && (
+        <button
+          type="button"
+          className="absolute right-4 top-4 inline-flex items-center justify-center rounded-full bg-white/10 p-2 text-indigo-100 transition hover:bg-white/20 lg:hidden"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
       {/* Logo */}
-      <div className="flex items-center gap-3 mb-10">
+      <div className="mb-10 mt-2 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow">
           T
         </div>
@@ -58,7 +71,7 @@ export default function TeacherSidebar() {
       </div>
 
       {/* Links */}
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-1 flex-col gap-1">
         {items.map((i) => {
           const Icon = i.icon
           return (

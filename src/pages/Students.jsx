@@ -9,29 +9,32 @@ function StudentRow({ s, onEdit, onDelete }) {
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -5 }}
-      className="flex items-center justify-between border-b border-gray-100 py-4 hover:bg-gray-50 transition-all duration-200 rounded-lg px-3"
+      className="rounded-xl border border-gray-100 bg-white/80 px-4 py-4 shadow-sm transition-all duration-200 hover:shadow-md sm:flex sm:items-center sm:justify-between"
     >
-      <div>
-        <div className="font-semibold text-gray-900">
+      <div className="space-y-1">
+        <div className="text-lg font-semibold text-gray-900">
           {s.firstName} {s.lastName}
         </div>
         <div className="text-sm text-gray-500">
-          {s.email} •{' '}
+          {s.email}
+        </div>
+        <div className="text-sm font-medium text-indigo-600">
+          Class:{' '}
           {typeof s.class === 'object' && s.class
             ? s.class.name
             : s.class || '—'}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="mt-4 flex flex-wrap gap-2 sm:mt-0 sm:flex-nowrap sm:items-center">
         <button
           onClick={() => onEdit(s)}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-indigo-500 text-indigo-600 font-medium hover:bg-indigo-50 transition-all duration-200"
+          className="flex w-full items-center justify-center gap-1 rounded-lg border border-indigo-500 px-3 py-2 text-sm font-medium text-indigo-600 transition-all duration-200 hover:bg-indigo-50 sm:w-auto"
         >
           <Edit2 size={14} /> Edit
         </button>
         <button
           onClick={() => onDelete(s._id)}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-all duration-200"
+          className="flex w-full items-center justify-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-red-700 sm:w-auto"
         >
           <Trash2 size={14} /> Delete
         </button>
@@ -115,10 +118,10 @@ export default function Students() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
+      <div className="mx-auto max-w-6xl space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
               <GraduationCap className="w-7 h-7 text-indigo-600" />
@@ -141,20 +144,20 @@ export default function Students() {
                 password: '',
               })
             }}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-200 shadow-sm hover:shadow-md"
+            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white shadow-sm transition-all duration-200 hover:bg-indigo-700 hover:shadow-md active:bg-indigo-800"
           >
             <PlusCircle size={18} /> New Student
           </button>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8 mb-10 hover:shadow-lg transition-all duration-300">
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
           <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             {editing ? 'Edit Student' : 'Add New Student'}
           </h3>
-          <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <input
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 transition-all"
+              className="rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               placeholder="First Name"
               value={form.firstName}
               onChange={(e) =>
@@ -220,7 +223,7 @@ export default function Students() {
             <div className="md:col-span-3 flex justify-end">
               <button
                 type="submit"
-                className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white shadow-sm transition-all duration-300 hover:bg-indigo-700 hover:shadow-md active:bg-indigo-800"
               >
                 <Save size={16} />
                 {editing ? 'Update Student' : 'Create Student'}
@@ -230,25 +233,27 @@ export default function Students() {
         </div>
 
         {/* Students List */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8 hover:shadow-lg transition-all duration-300">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
+          <h3 className="mb-4 text-xl font-semibold text-gray-800">
             All Students
           </h3>
           {students.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">
+            <div className="py-10 text-center text-gray-500">
               No students found.
             </div>
           ) : (
-            <AnimatePresence>
-              {students.map((s) => (
-                <StudentRow
-                  key={s._id}
-                  s={s}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              ))}
-            </AnimatePresence>
+            <div className="space-y-3">
+              <AnimatePresence>
+                {students.map((s) => (
+                  <StudentRow
+                    key={s._id}
+                    s={s}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
           )}
         </div>
       </div>

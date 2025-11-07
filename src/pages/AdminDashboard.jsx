@@ -39,6 +39,9 @@ export default function AdminDashboard() {
     return num.toLocaleString('en-IN')
   }
 
+  // filter out analytics items we don't want to display (e.g. New Admissions (30d))
+  const filteredAnalytics = (overview?.analytics || []).filter(a => !/New Admissions\s*\(30d\)/i.test(a.title))
+
   const StatCard = ({ icon: Icon, label, value, iconColor, isMain = false }) => (
     <div className={`relative overflow-hidden rounded-2xl bg-white p-6 border border-gray-100 shadow-md hover:shadow-xl hover:border-indigo-100 transition-all duration-300 group`}>
       <div className="flex items-start justify-between">
@@ -121,7 +124,7 @@ export default function AdminDashboard() {
               Analytics
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(overview?.analytics || []).map((a, idx) => (
+              {filteredAnalytics.map((a, idx) => (
                 <AnalyticsCard key={idx} title={a.title} value={a.value} />
               ))}
             </div>

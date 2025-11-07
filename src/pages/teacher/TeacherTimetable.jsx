@@ -12,7 +12,13 @@ export default function TeacherTimetable() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await API.get('/teacher/timetable/' + (form.classId || ''))
+      if (!form.classId) {
+        // nothing to load until we know the class id assigned
+        setTimetables([])
+        setLoading(false)
+        return
+      }
+      const res = await API.get('/teacher/timetable/' + form.classId)
       setTimetables(res.data)
     } catch (err) {
       console.error(err)

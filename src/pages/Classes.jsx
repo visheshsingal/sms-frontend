@@ -2,13 +2,77 @@ import React, { useEffect, useState } from 'react'
 import API from '../utils/api'
 import { Users, GraduationCap, Trash2, Edit3, PlusCircle } from 'lucide-react'
 
+// Small searchable multi-select for teachers.
+function TeacherMultiSelect({ teachers = [], value = [], onChange }) {
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
+
+  const filtered = teachers.filter((t) =>
+    `${t.firstName} ${t.lastName}`.toLowerCase().includes(q.toLowerCase())
+  )
+
+  const toggle = (id) => {
+    const setIds = new Set(value || [])
+    if (setIds.has(id)) setIds.delete(id)
+    else setIds.add(id)
+    onChange(Array.from(setIds))
+  }
+
+  const selectedNames = teachers
+    .filter((t) => (value || []).includes(t._id))
+    .map((t) => `${t.firstName} ${t.lastName}`)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        className="w-full text-left px-3 py-2 border border-gray-300 rounded bg-white flex items-center justify-between"
+      >
+        <span className="truncate text-sm text-gray-700">
+          {selectedNames.length ? selectedNames.join(', ') : 'Assign teachers...'}
+        </span>
+        <span className="text-gray-400 ml-2">▾</span>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded shadow-lg p-2 max-h-56 overflow-auto">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search teachers..."
+            className="w-full px-3 py-2 border border-gray-200 rounded mb-2 text-sm outline-none"
+          />
+          <div className="space-y-1">
+            {filtered.map((t) => (
+              <label key={t._id} className="flex items-center gap-2 p-1 rounded hover:bg-gray-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={(value || []).includes(t._id)}
+                  onChange={() => toggle(t._id)}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm text-gray-800">{t.firstName} {t.lastName}</span>
+              </label>
+            ))}
+            {filtered.length === 0 && <div className="text-sm text-gray-500 p-2">No teachers found</div>}
+          </div>
+          <div className="mt-2 flex justify-end">
+            <button onClick={() => setOpen(false)} className="px-3 py-1 text-sm text-gray-600">Done</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Classes() {
   const [classes, setClasses] = useState([])
   const [name, setName] = useState('')
+  const [newSubjects, setNewSubjects] = useState([])
   const [teachers, setTeachers] = useState([])
   const [students, setStudents] = useState([])
   const [editing, setEditing] = useState(null)
-  const [teacherId, setTeacherId] = useState('')
   const [selectedStudents, setSelectedStudents] = useState([])
 
   const load = async () => {
@@ -29,8 +93,9 @@ export default function Classes() {
   const createClass = async (e) => {
     e.preventDefault()
     try {
-      await API.post('/admin/classes', { name })
+      await API.post('/admin/classes', { name, subjects: newSubjects })
       setName('')
+      setNewSubjects([])
       load()
     } catch (err) {
       alert(err?.response?.data?.message || err.message)
@@ -39,15 +104,22 @@ export default function Classes() {
 
   const edit = (c) => {
     setEditing(c)
-    setTeacherId(c.teacher ? c.teacher._id : '')
     setSelectedStudents(c.students ? c.students.map((s) => s._id) : [])
+    // load subjects into editable form
+    setEditingSubjects(
+      c.subjects && c.subjects.length
+        ? c.subjects.map((s) => ({ name: s.name, teacherIds: s.teachers ? s.teachers.map((t) => t._id) : [] }))
+        : []
+    )
   }
+
+  const [editingSubjects, setEditingSubjects] = useState([])
 
   const saveAssignments = async () => {
     try {
       await API.put(`/admin/classes/${editing._id}`, {
-        teacherId: teacherId || undefined,
         studentIds: selectedStudents,
+        subjects: editingSubjects,
       })
       setEditing(null)
       load()
@@ -91,10 +163,46 @@ export default function Classes() {
               onChange={(e) => setName(e.target.value)}
               required
             />
-            <button className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-200 shadow-sm hover:shadow">
-              Create Class
-            </button>
+            <div className="flex items-center gap-3">
+              <button className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-200 shadow-sm hover:shadow">
+                Create Class
+              </button>
+            </div>
           </form>
+
+          {/* New Subjects for creation */}
+          <div className="mt-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Add Subjects (optional)</label>
+            {newSubjects.map((s, idx) => (
+              <div key={idx} className="flex gap-2 mb-2 items-start">
+                <input
+                  value={s.name}
+                  onChange={(e) => {
+                    const copy = [...newSubjects]
+                    copy[idx].name = e.target.value
+                    setNewSubjects(copy)
+                  }}
+                  placeholder="Subject name"
+                  className="px-3 py-2 border border-gray-300 rounded w-1/3"
+                />
+                <div className="flex-1">
+                  <TeacherMultiSelect
+                    teachers={teachers}
+                    value={s.teacherIds || []}
+                    onChange={(ids) => {
+                      const copy = [...newSubjects]
+                      copy[idx].teacherIds = ids
+                      setNewSubjects(copy)
+                    }}
+                  />
+                </div>
+                <button type="button" onClick={() => setNewSubjects(prev => prev.filter((_, i) => i !== idx))} className="px-3 py-2 bg-red-100 rounded">Remove</button>
+              </div>
+            ))}
+            <div>
+              <button onClick={() => setNewSubjects(prev => [...prev, { name: '', teacherIds: [] }])} className="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded text-indigo-600">+ Add subject</button>
+            </div>
+          </div>
         </div>
 
         {/* Classes List */}
@@ -123,13 +231,17 @@ export default function Classes() {
                       <div className="flex-1">
                         <div className="font-semibold text-lg text-gray-900 mb-2">{c.name}</div>
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <span className="font-medium">Teacher:</span>
+                            {/* class-level homeroom teacher removed; subjects contain teacher assignments now */}
+                          <div className="flex items-start gap-2 text-sm text-gray-600 mt-2">
+                            <span className="font-medium whitespace-nowrap">Subjects:</span>
                             <span className="text-gray-800">
-                              {c.teacher ? (
-                                `${c.teacher.firstName} ${c.teacher.lastName}`
+                              {c.subjects && c.subjects.length > 0 ? (
+                                c.subjects.map((s) => {
+                                  const names = s.teachers && s.teachers.length ? s.teachers.map(t => `${t.firstName} ${t.lastName}`).join(', ') : 'No teacher'
+                                  return `${s.name} (${names})`
+                                }).join('; ')
                               ) : (
-                                <span className="text-gray-400 italic">Not assigned</span>
+                                <span className="text-gray-400 italic">No subjects</span>
                               )}
                             </span>
                           </div>
@@ -175,30 +287,13 @@ export default function Classes() {
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200">
               {/* Modal Header */}
               <div className="sticky top-0 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
-                <h4 className="text-xl font-bold text-gray-900">Assign Teacher & Students</h4>
+                <h4 className="text-xl font-bold text-gray-900">Assign Students & Subjects</h4>
                 <p className="text-sm text-gray-600 mt-1">Class: {editing.name}</p>
               </div>
 
               {/* Modal Body */}
               <div className="p-6 space-y-6">
-                {/* Teacher Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Assign Teacher
-                  </label>
-                  <select
-                    value={teacherId}
-                    onChange={(e) => setTeacherId(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 bg-white transition-all"
-                  >
-                    <option value="">-- No teacher assigned --</option>
-                    {teachers.map((t) => (
-                      <option key={t._id} value={t._id}>
-                        {t.firstName} {t.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {/* class-level homeroom teacher UI removed; use per-subject teacher assignments */}
 
                 {/* Students Selection */}
                 <div>
@@ -234,6 +329,46 @@ export default function Classes() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Subjects Selection / Edit */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Subjects & Teachers</label>
+                  {editingSubjects.length === 0 ? (
+                    <p className="text-sm text-gray-500 italic">No subjects defined for this class</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {editingSubjects.map((s, idx) => (
+                        <div key={idx} className="flex gap-2 items-center">
+                          <input
+                            value={s.name}
+                            onChange={(e) => {
+                              const copy = [...editingSubjects]
+                              copy[idx].name = e.target.value
+                              setEditingSubjects(copy)
+                            }}
+                            placeholder="Subject name"
+                            className="px-3 py-2 border border-gray-300 rounded w-1/3"
+                          />
+                          <div className="flex-1">
+                            <TeacherMultiSelect
+                              teachers={teachers}
+                              value={s.teacherIds || []}
+                              onChange={(ids) => {
+                                const copy = [...editingSubjects]
+                                copy[idx].teacherIds = ids
+                                setEditingSubjects(copy)
+                              }}
+                            />
+                          </div>
+                          <button onClick={() => setEditingSubjects(prev => prev.filter((_, i) => i !== idx))} className="px-3 py-2 bg-red-100 rounded">Remove</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <button onClick={() => setEditingSubjects(prev => [...prev, { name: '', teacherIds: [] }])} className="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded text-indigo-600">+ Add subject</button>
+                  </div>
                 </div>
               </div>
 

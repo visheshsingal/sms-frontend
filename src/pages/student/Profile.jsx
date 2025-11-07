@@ -5,27 +5,71 @@ import API from '../../utils/api'
 
 export default function StudentProfile() {
   const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     const load = async () => {
       try {
+        setError(null)
         const res = await API.get('/student/me')
         setData(res.data)
       } catch (err) {
-        console.error(err)
-        if (err?.response?.status === 401) navigate('/student')
+        console.error('Failed to load /student/me', err)
+        // If auth error, send user to login
+        if (err?.response?.status === 401) return navigate('/student')
+        // otherwise surface an error message so UI doesn't spin forever
+        setError(err?.response?.data?.message || err.message || 'Network error')
       }
     }
     load()
   }, [])
 
+
   if (!data)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="flex items-center gap-3 text-gray-600">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-          <span className="font-medium">Loading profile...</span>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-lg w-full text-center">
+          {!error ? (
+            <div className="flex items-center gap-3 justify-center text-gray-600">
+              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+              <span className="font-medium">Loading profile...</span>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to load profile</h3>
+              <p className="text-sm text-gray-600 mb-4">{error}</p>
+              <div className="text-sm text-gray-500 mb-4">
+                Common causes: server not running, network error, or missing/expired login token.
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => {
+                    setError(null)
+                    setData(null)
+                    // retry: re-run effect by calling load directly
+                    ;(async () => {
+                      try {
+                        const res = await API.get('/student/me')
+                        setData(res.data)
+                      } catch (err) {
+                        setError(err?.response?.data?.message || err.message || 'Network error')
+                      }
+                    })()
+                  }}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md"
+                >
+                  Retry
+                </button>
+                <button
+                  onClick={() => navigate('/student')}
+                  className="px-4 py-2 border border-gray-200 rounded-md"
+                >
+                  Go to Login
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -92,16 +136,20 @@ export default function StudentProfile() {
                 </div>
               </div>
 
-              <div>
-                <div className="text-gray-500 mb-1 flex items-center gap-1">
-                  <Users className="w-4 h-4 text-indigo-500" /> Class Teacher
-                </div>
-                <div className="font-medium text-gray-900">
-                  {cls && cls.teacher
-                    ? `${cls.teacher.firstName} ${cls.teacher.lastName}`
-                    : '—'}
-                </div>
-              </div>
+              {(() => {
+                const teacherName = cls && cls.teacher
+                  ? [cls.teacher.firstName, cls.teacher.lastName].filter(Boolean).join(' ')
+                  : ''
+                if (!teacherName) return null
+                return (
+                  <div>
+                    <div className="text-gray-500 mb-1 flex items-center gap-1">
+                      <Users className="w-4 h-4 text-indigo-500" /> Class Teacher
+                    </div>
+                    <div className="font-medium text-gray-900">{teacherName}</div>
+                  </div>
+                )
+              })()}
 
               <div>
                 <div className="text-gray-500 mb-1 flex items-center gap-1">
@@ -111,6 +159,7 @@ export default function StudentProfile() {
                   {cls && cls.students ? cls.students.length : 0}
                 </div>
               </div>
+              {/* transport moved to dedicated page */}
             </div>
           </div>
         </div>

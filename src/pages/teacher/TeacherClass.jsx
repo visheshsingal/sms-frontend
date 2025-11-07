@@ -52,7 +52,7 @@ export default function TeacherClass() {
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
             <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
               <div className="text-sm text-gray-500">Class Name</div>
               <div className="text-lg font-semibold text-indigo-700">{cls.name}</div>
@@ -61,14 +61,6 @@ export default function TeacherClass() {
               <div className="text-sm text-gray-500">Total Students</div>
               <div className="text-lg font-semibold text-gray-800">
                 {cls.students?.length || 0}
-              </div>
-            </div>
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <div className="text-sm text-gray-500">Class Teacher</div>
-              <div className="text-lg font-semibold text-gray-800">
-                {cls.teacher
-                  ? `${cls.teacher.firstName} ${cls.teacher.lastName}`
-                  : 'You'}
               </div>
             </div>
           </div>

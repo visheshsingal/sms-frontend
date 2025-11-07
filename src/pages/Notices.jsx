@@ -104,6 +104,7 @@ export default function Notices() {
                   <option value="all">All</option>
                   <option value="students">Students</option>
                   <option value="teachers">Teachers</option>
+                  <option value="drivers">Drivers</option>
                   <option value="admins">Admins</option>
                 </select>
 
