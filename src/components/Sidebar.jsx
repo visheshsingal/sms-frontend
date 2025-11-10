@@ -23,7 +23,8 @@ const items = [
   { to: '/admin/buses', label: 'Buses', icon: Bus },
   { to: '/admin/live', label: 'Live Tracking', icon: MapPin },
   { to: '/admin/routes', label: 'Routes', icon: MapPin },
-  { to: '/admin/finance', label: 'Finance', icon: DollarSign },
+  // Finance temporarily removed from sidebar. Uncomment if needed later:
+  // { to: '/admin/finance', label: 'Finance', icon: DollarSign },
   { to: '/admin/attendance', label: 'Mark Attendance', icon: ClipboardList },
   { to: '/admin/attendance-report', label: 'Attendance Report', icon: FileText },
   { to: '/admin/notices', label: 'Notices', icon: Bell },

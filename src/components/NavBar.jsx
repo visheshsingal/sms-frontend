@@ -21,8 +21,11 @@ export default function NavBar(){
   }
 
   const role = localStorage.getItem('role');
-  const username = localStorage.getItem('username');
-  const isLoggedIn = !!username;
+  const token = localStorage.getItem('token');
+  const username = localStorage.getItem('username') || localStorage.getItem('email') || '';
+  // Consider user logged in when a valid token exists. Username/email may be empty for some flows,
+  // so rely on token presence to determine logged-in UI state.
+  const isLoggedIn = !!token;
 
   // Custom Link Component for consistent styling (white navbar with indigo accents)
   const NavLink = ({ to, children, icon: Icon }) => (
@@ -70,10 +73,10 @@ export default function NavBar(){
             {/* Primary Navigation Links - Using the custom NavLink component */}
             <div className="hidden md:flex items-center gap-2">
               <NavLink to="/" icon={Home}>Home</NavLink>
-              <NavLink to={role === 'admin' ? '/admin/dashboard' : '/admin'} icon={User}>Admin</NavLink>
-              <NavLink to="/student" icon={Users}>Student</NavLink>
-              <NavLink to="/teacher" icon={BookOpen}>Teacher</NavLink>
-              <NavLink to="/driver" icon={Bus}>Driver</NavLink>
+                <NavLink to={role === 'admin' ? '/admin/dashboard' : '/admin'} icon={User}>Admin</NavLink>
+                <NavLink to={role === 'student' ? '/student/profile' : '/student'} icon={Users}>Student</NavLink>
+                <NavLink to={role === 'teacher' ? '/teacher/dashboard' : '/teacher'} icon={BookOpen}>Teacher</NavLink>
+                <NavLink to={role === 'driver' ? '/driver/dashboard' : '/driver'} icon={Bus}>Driver</NavLink>
             </div>
 
             {/* Separator Line */}
@@ -110,9 +113,10 @@ export default function NavBar(){
                   {loginOpen && (
                     <div className="absolute right-0 mt-2 w-44 rounded-lg border border-gray-100 bg-white py-2 text-sm shadow-lg">
                       <Link to="/admin" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Admin</Link>
-                      <Link to="/student" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Student</Link>
-                      <Link to="/teacher" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Teacher</Link>
-                      <Link to="/driver" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Driver</Link>
+                        <Link to={role === 'admin' ? '/admin/dashboard' : '/admin'} className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Admin</Link>
+                        <Link to={role === 'student' ? '/student/profile' : '/student'} className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Student</Link>
+                        <Link to={role === 'teacher' ? '/teacher/dashboard' : '/teacher'} className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Teacher</Link>
+                        <Link to={role === 'driver' ? '/driver/dashboard' : '/driver'} className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Driver</Link>
                     </div>
                   )}
                 </div>
@@ -134,10 +138,10 @@ export default function NavBar(){
           <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-3 shadow-inner">
             <div className="flex flex-col gap-2">
               <NavLink to="/" icon={Home}>Home</NavLink>
-              <NavLink to={role === 'admin' ? '/admin/dashboard' : '/admin'} icon={User}>Admin</NavLink>
-              <NavLink to="/student" icon={Users}>Student</NavLink>
-              <NavLink to="/teacher" icon={BookOpen}>Teacher</NavLink>
-              <NavLink to="/driver" icon={Bus}>Driver</NavLink>
+                <NavLink to={role === 'admin' ? '/admin/dashboard' : '/admin'} icon={User}>Admin</NavLink>
+                <NavLink to={role === 'student' ? '/student/profile' : '/student'} icon={Users}>Student</NavLink>
+                <NavLink to={role === 'teacher' ? '/teacher/dashboard' : '/teacher'} icon={BookOpen}>Teacher</NavLink>
+                <NavLink to={role === 'driver' ? '/driver/dashboard' : '/driver'} icon={Bus}>Driver</NavLink>
             </div>
             <div className="my-3 h-px bg-gray-100" />
             {isLoggedIn ? (

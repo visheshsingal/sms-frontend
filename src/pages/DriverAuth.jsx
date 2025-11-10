@@ -1,21 +1,30 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import API from '../utils/api'
 import { useNavigate } from 'react-router-dom'
 import { Bus, LogIn } from 'lucide-react'
 
 export default function DriverAuth() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const role = localStorage.getItem('role')
+    if (token && role === 'driver') {
+      navigate('/driver/dashboard')
+    }
+  }, [])
 
   const submit = async e => {
     e.preventDefault()
     try {
-      const res = await API.post('/auth/login', { username, password })
+    const res = await API.post('/auth/login', { email, password })
       if (res.data.role !== 'driver') return alert('Not a driver account')
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('role', res.data.role)
-      localStorage.setItem('username', res.data.username)
+    localStorage.setItem('username', res.data.username)
+    localStorage.setItem('email', res.data.email || res.data.username)
   // Navigate to driver dashboard
   navigate('/driver/dashboard')
     } catch (err) {
@@ -38,11 +47,11 @@ export default function DriverAuth() {
 
         <form onSubmit={submit} className="flex flex-col gap-4">
           <div>
-            <label className="text-sm text-slate-300 block mb-1">Username</label>
+            <label className="text-sm text-slate-300 block mb-1">Email</label>
             <input
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="Enter your username"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Enter your email"
               className="w-full px-4 py-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 outline-none transition-all duration-300"
             />
           </div>

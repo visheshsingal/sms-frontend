@@ -5,12 +5,14 @@ import API from '../../utils/api'
 export default function StudentTimetable() {
   const [timetables, setTimetables] = useState([])
   const [loading, setLoading] = useState(false)
+  const [month, setMonth] = useState('')
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
       try {
-        const res = await API.get('/student/me/timetable')
+        const q = month ? `?month=${month}` : ''
+        const res = await API.get(`/student/me/timetable${q}`)
         setTimetables(res.data)
       } catch (err) {
         console.error(err)
@@ -18,7 +20,7 @@ export default function StudentTimetable() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [month])
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -29,6 +31,13 @@ export default function StudentTimetable() {
             <CalendarDays className="w-6 h-6 text-indigo-600" />
             Class Timetable
           </h3>
+
+          {/* Month filter */}
+          <div className="mb-4 flex items-center gap-3">
+            <label className="text-sm text-gray-700">Filter by month:</label>
+            <input type="month" value={month} onChange={(e)=> setMonth(e.target.value)} className="px-3 py-2 border rounded-md" />
+            {month && <button onClick={()=> setMonth('')} className="text-sm text-indigo-600 hover:underline">Clear</button>}
+          </div>
 
           {/* Loading state */}
           {loading ? (

@@ -11,7 +11,6 @@ import Students from './pages/Students'
 import Teachers from './pages/Teachers'
 import Drivers from './pages/Drivers'
 import Buses from './pages/Buses'
-import Finance from './pages/Finance'
 import Classes from './pages/Classes'
 import RoutesPage from './pages/Routes'
 import StudentAuth from './pages/StudentAuth'
@@ -63,7 +62,8 @@ export default function App(){
           <Route path='classes' element={<Classes/>} />
           <Route path='buses' element={<Buses/>} />
           <Route path='routes' element={<RoutesPage/>} />
-          <Route path='finance' element={<Finance/>} />
+          {/* Finance section temporarily hidden — comment out for now. Can re-enable later by restoring the import and this route. */}
+          {/* <Route path='finance' element={<Finance/>} /> */}
           <Route path='attendance' element={<Attendance/>} />
           <Route path='attendance-report' element={<AttendanceReport/>} />
           <Route path='notices' element={<Notices/>} />

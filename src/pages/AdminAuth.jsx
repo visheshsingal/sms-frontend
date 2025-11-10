@@ -1,13 +1,22 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import API from '../utils/api'
 import { useNavigate } from 'react-router-dom'
 import { Shield, LogIn, UserPlus } from 'lucide-react'
 
 export default function AdminAuth() {
   const [isSignup, setIsSignup] = useState(false)
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // If a token for an admin is already present, avoid showing the login page and redirect
+    const token = localStorage.getItem('token')
+    const role = localStorage.getItem('role')
+    if (token && role === 'admin') {
+      navigate('/admin/dashboard')
+    }
+  }, [])
 
   const toggle = () => setIsSignup(s => !s)
 
@@ -15,14 +24,17 @@ export default function AdminAuth() {
     e.preventDefault()
     try {
       if (isSignup) {
-        await API.post('/admin/signup', { username, password })
+        // derive a safe username from the email local-part to avoid storing raw emails as username
+        const local = (email || '').split('@')[0] || email
+        await API.post('/admin/signup', { username: local, email, password })
         alert('Admin account created. Please login.')
         setIsSignup(false)
       } else {
-        const res = await API.post('/auth/login', { username, password })
+        const res = await API.post('/auth/login', { email, password })
         localStorage.setItem('token', res.data.token)
         localStorage.setItem('role', res.data.role)
         localStorage.setItem('username', res.data.username)
+        localStorage.setItem('email', res.data.email || res.data.username)
         navigate('/admin/dashboard')
       }
     } catch (err) {
@@ -52,11 +64,11 @@ export default function AdminAuth() {
         {/* Form */}
         <form onSubmit={submit} className="flex flex-col gap-4">
           <div>
-            <label className="text-sm text-slate-300 block mb-1">Username</label>
+            <label className="text-sm text-slate-300 block mb-1">Email</label>
             <input
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="Enter username"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Enter email"
               className="w-full px-4 py-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 outline-none transition-all duration-300"
             />
           </div>

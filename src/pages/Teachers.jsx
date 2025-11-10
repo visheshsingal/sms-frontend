@@ -33,6 +33,12 @@ function TeacherRow({ t, onEdit, onDelete }) {
                 <Briefcase className="h-4 w-4 text-indigo-600" />
                 {t.department || 'No department'}
               </span>
+              <span className="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                {t.phone || '—'}
+              </span>
             </div>
           </div>
         </div>
@@ -57,11 +63,13 @@ function TeacherRow({ t, onEdit, onDelete }) {
 
 export default function Teachers() {
   const [teachers, setTeachers] = useState([])
+  const [query, setQuery] = useState('')
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
     email: '',
     department: '',
+    phone: '',
     username: '',
     password: '',
   })
@@ -77,6 +85,13 @@ export default function Teachers() {
     load()
   }, [])
 
+  const filteredTeachers = teachers.filter((t) => {
+    const q = (query || '').toLowerCase().trim()
+    if (!q) return true
+    const hay = `${t.firstName || ''} ${t.lastName || ''} ${t.email || ''} ${t.department || ''} ${t.phone || ''}`.toLowerCase()
+    return hay.includes(q)
+  })
+
   const submit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -85,11 +100,7 @@ export default function Teachers() {
         await API.put(`/admin/teachers/${editing._id}`, form)
         setEditing(null)
       } else {
-        if (!form.username || !form.password) {
-          alert('Please provide username and password for the teacher')
-          setLoading(false)
-          return
-        }
+        // allow creating teacher without credentials (login can be created later)
         await API.post('/admin/teachers', form)
       }
       setForm({
@@ -97,6 +108,7 @@ export default function Teachers() {
         lastName: '',
         email: '',
         department: '',
+        phone: '',
         username: '',
         password: '',
       })
@@ -115,6 +127,7 @@ export default function Teachers() {
       lastName: t.lastName,
       email: t.email,
       department: t.department,
+      phone: t.phone || '',
       username: '',
       password: '',
     })
@@ -133,6 +146,7 @@ export default function Teachers() {
       lastName: '',
       email: '',
       department: '',
+      phone: '',
       username: '',
       password: '',
     })
@@ -227,40 +241,47 @@ export default function Teachers() {
                 />
               </div>
 
-              {!editing && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Username <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                      placeholder="username"
-                      value={form.username}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, username: e.target.value }))
-                      }
-                      required
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  placeholder="Phone number"
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Password <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="password"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                      placeholder="••••••••"
-                      value={form.password}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, password: e.target.value }))
-                      }
-                      required
-                    />
-                  </div>
-                </>
-              )}
+              {/* Username/password always editable — when editing, leaving blank keeps existing credentials */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Username <span className="text-sm text-gray-500">(optional — will be derived from email if omitted)</span>
+                </label>
+                <input
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  placeholder="username"
+                  value={form.username}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, username: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password {editing ? <span className="text-sm text-gray-500">(leave blank to keep)</span> : <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  placeholder={editing ? '•••••••• (leave blank to keep)' : '•••••••• (optional)'}
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, password: e.target.value }))
+                  }
+                />
+              </div>
             </div>
 
             <div className="flex justify-end pt-3">
@@ -287,10 +308,18 @@ export default function Teachers() {
 
         {/* Teachers List */}
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-5">
-            All Teachers
-          </h2>
-          {teachers.length === 0 ? (
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">All Teachers</h2>
+            <div className="w-64">
+              <input
+                placeholder="Search teachers (name, email, dept, phone...)"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100"
+              />
+            </div>
+          </div>
+          {filteredTeachers.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-10 h-10 text-indigo-600" />
@@ -303,7 +332,7 @@ export default function Teachers() {
               </p>
             </div>
           ) : (
-            teachers.map((t) => (
+            filteredTeachers.map((t) => (
               <TeacherRow
                 key={t._id}
                 t={t}

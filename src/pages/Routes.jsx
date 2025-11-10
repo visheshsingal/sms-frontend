@@ -8,7 +8,7 @@ export default function Routes() {
   const [students, setStudents] = useState([])
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ name: '', startTime: '08:00', startLocation: '', bus: '', stops: [] })
+  const [form, setForm] = useState({ name: '', startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] })
 
   const load = async () => {
     const [rRes, bRes, sRes] = await Promise.all([
@@ -33,7 +33,7 @@ export default function Routes() {
       } else {
         await API.post('/admin/routes', form)
       }
-      setForm({ name: '', startTime: '08:00', startLocation: '', bus: '', stops: [] })
+      setForm({ name: '', startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] })
       setCreating(false)
       setEditing(null)
       load()
@@ -57,9 +57,10 @@ export default function Routes() {
         {creating && (
           <div className="bg-white p-6 rounded-lg border mb-6">
             <form onSubmit={save} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <input value={form.name} onChange={e => setForm(f=>({...f, name: e.target.value}))} placeholder="Route name" className="px-3 py-2 border rounded" required/>
-                <input value={form.startTime} onChange={e => setForm(f=>({...f, startTime: e.target.value}))} placeholder="Start time (HH:MM)" className="px-3 py-2 border rounded" required/>
+                <input type="time" value={form.startTime} onChange={e => setForm(f=>({...f, startTime: e.target.value}))} placeholder="Start time (HH:MM)" className="px-3 py-2 border rounded" required/>
+                <input type="time" value={form.endTime||''} onChange={e => setForm(f=>({...f, endTime: e.target.value}))} placeholder="End time (HH:MM)" className="px-3 py-2 border rounded" />
                 <select value={form.bus||''} onChange={e=>setForm(f=>({...f, bus: e.target.value}))} className="px-3 py-2 border rounded">
                   <option value="">-- No bus assigned --</option>
                   {buses.map(b=> <option key={b._id} value={b._id}>{b.number}</option>)}
@@ -91,7 +92,7 @@ export default function Routes() {
           {routes.map(r=> (
             <div key={r._id} className="bg-white p-4 rounded border flex justify-between items-center">
               <div>
-                <div className="font-semibold">{r.name} <span className="text-sm text-gray-500">({r.startTime})</span></div>
+                <div className="font-semibold">{r.name} <span className="text-sm text-gray-500">({r.startTime}{r.endTime ? ` - ${r.endTime}` : ''})</span></div>
                 <div className="text-sm text-gray-600">Bus: {r.bus ? r.bus.number : 'No bus'}</div>
                 <div className="text-sm text-gray-700 mt-2">
                   {r.stops && r.stops.length ? r.stops.map(s => {
@@ -107,6 +108,7 @@ export default function Routes() {
                   setForm({
                     name: r.name || '',
                     startTime: r.startTime || '08:00',
+                    endTime: r.endTime || '',
                     startLocation: r.startLocation || '',
                     bus: r.bus && r.bus._id ? r.bus._id : (r.bus || ''),
                     stops: (r.stops||[]).map(s=>({ address: s.address||'', time: s.time||'', estimatedMinutes: s.estimatedMinutes||0, students: (s.students||[]).map(st => (st._id || st)) }))

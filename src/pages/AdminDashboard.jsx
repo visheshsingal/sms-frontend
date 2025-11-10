@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Users, GraduationCap, IndianRupee, Activity } from 'lucide-react'
+import { Users, GraduationCap, Bus, Activity } from 'lucide-react'
 import API from '../utils/api'
 
 export default function AdminDashboard() {
   const [overview, setOverview] = useState(null)
+  const [driversCount, setDriversCount] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -17,6 +18,15 @@ export default function AdminDashboard() {
         const res = await API.get('/admin/reports/overview')
         if (!mounted) return
         setOverview(res.data)
+        // fetch drivers count separately (reports route doesn't include drivers)
+        try {
+          const drv = await API.get('/admin/drivers')
+          if (!mounted) return
+          setDriversCount(Array.isArray(drv.data) ? drv.data.length : drv.data?.length || 0)
+        } catch (e) {
+          console.warn('Failed loading drivers count', e?.message || e)
+          if (mounted) setDriversCount('—')
+        }
       } catch (err) {
         console.error('Overview load error', err)
       } finally {
@@ -39,8 +49,14 @@ export default function AdminDashboard() {
     return num.toLocaleString('en-IN')
   }
 
-  // filter out analytics items we don't want to display (e.g. New Admissions (30d))
-  const filteredAnalytics = (overview?.analytics || []).filter(a => !/New Admissions\s*\(30d\)/i.test(a.title))
+  // filter out analytics items we don't want to display
+  const filteredAnalytics = (overview?.analytics || []).filter(a => {
+    const t = (a.title || '').toLowerCase()
+    if (/new admissions\s*\(30d\)/i.test(a.title)) return false
+    if (t.includes('active teachers')) return false
+    if (t.includes('avg fees') || t.includes('avg fee')) return false
+    return true
+  })
 
   const StatCard = ({ icon: Icon, label, value, iconColor, isMain = false }) => (
     <div className={`relative overflow-hidden rounded-2xl bg-white p-6 border border-gray-100 shadow-md hover:shadow-xl hover:border-indigo-100 transition-all duration-300 group`}>
@@ -109,27 +125,15 @@ export default function AdminDashboard() {
             isMain
           />
           <StatCard
-            icon={IndianRupee}
-            label="Total Fees Collected"
-            value={overview ? `₹${formatNumber(overview.totalFees)}` : '—'}
-            iconColor="bg-green-500"
+            icon={Bus}
+            label="Total Drivers"
+            value={driversCount !== null ? formatNumber(driversCount) : isLoading ? <span className="inline-block w-24 h-8 bg-gray-200 rounded animate-pulse"></span> : '—'}
+            iconColor="bg-yellow-500"
             isMain
           />
         </div>
 
-        {/* Analytics Section */}
-        {(!isLoading || overview) && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-5 border-l-4 border-indigo-500 pl-3">
-              Analytics
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredAnalytics.map((a, idx) => (
-                <AnalyticsCard key={idx} title={a.title} value={a.value} />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Analytics section removed per user request */}
 
         {/* Loading Skeleton */}
         {isLoading && !overview && (

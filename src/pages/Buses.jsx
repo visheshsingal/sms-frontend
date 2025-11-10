@@ -7,7 +7,7 @@ function BusRow({ b, onEdit, onDelete }){
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white/80 px-4 py-4 shadow-sm transition hover:shadow-md sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-2">
-        <div className="text-lg font-semibold text-gray-900">Bus {b.number} — {b.route || 'No route'}</div>
+  <div className="text-lg font-semibold text-gray-900">Bus {b.number} — {b.route && b.route.name ? b.route.name : (b.route || 'No route')}</div>
         <div className="text-sm text-gray-500">
           Capacity: {b.capacity} • Driver: {b.driver ? `${b.driver.firstName} ${b.driver.lastName}` : 'Unassigned'}
         </div>
@@ -34,7 +34,7 @@ function BusRow({ b, onEdit, onDelete }){
 export default function Buses(){
   const [buses, setBuses] = useState([])
   const [drivers, setDrivers] = useState([])
-  const [form, setForm] = useState({ number: '', route: '', capacity: 20, driver: '' })
+  const [form, setForm] = useState({ number: '', capacity: 20, driver: '' })
   const [editing, setEditing] = useState(null)
 
   const load = async ()=>{ const res = await API.get('/admin/buses'); setBuses(res.data) }
@@ -45,14 +45,23 @@ export default function Buses(){
   const submit = async (e)=>{
     e.preventDefault()
     try{
-      if (editing){ await API.put(`/admin/buses/${editing._id}`, form); setEditing(null) }
-      else await API.post('/admin/buses', form)
+      // prepare payload: send null for unassigned driver, remove empty route
+      const payload = { ...form }
+      if (payload.driver === '') payload.driver = null
+      if (payload.capacity !== undefined) payload.capacity = Number(payload.capacity)
+
+      if (editing){ await API.put(`/admin/buses/${editing._id}`, payload); setEditing(null) }
+      else await API.post('/admin/buses', payload)
       setForm({ number: '', route: '', capacity: 20, driver: '' })
       load()
-    }catch(err){ alert(err?.response?.data?.message || err.message) }
+    }catch(err){
+      const body = err?.response?.data
+      const msg = body?.error || body?.message || JSON.stringify(body) || err.message
+      alert(msg)
+    }
   }
 
-  const onEdit = (b)=>{ setEditing(b); setForm({ number: b.number, route: b.route||'', capacity: b.capacity||20, driver: b.driver?._id || '' }) }
+  const onEdit = (b)=>{ setEditing(b); setForm({ number: b.number, capacity: b.capacity||20, driver: b.driver?._id || '' }) }
   const onDelete = async (id)=>{ if(!confirm('Delete bus?')) return; await API.delete(`/admin/buses/${id}`); load() }
 
   return (
@@ -68,9 +77,8 @@ export default function Buses(){
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
           <h3 className="mb-4 text-xl font-semibold">{editing? 'Edit Bus' : 'Add New Bus'}</h3>
-          <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <input placeholder="Number (e.g., 23A)" value={form.number} onChange={e=>setForm(f=>({...f, number:e.target.value}))} required className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
-            <input placeholder="Route" value={form.route} onChange={e=>setForm(f=>({...f, route:e.target.value}))} className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
             <input type="number" placeholder="Capacity" value={form.capacity} onChange={e=>setForm(f=>({...f, capacity: Number(e.target.value)}))} className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
             <select value={form.driver||''} onChange={e=>setForm(f=>({...f, driver:e.target.value}))} className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200">
               <option value="">Assign Driver (optional)</option>

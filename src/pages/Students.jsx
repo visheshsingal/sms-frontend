@@ -12,17 +12,20 @@ function StudentRow({ s, onEdit, onDelete }) {
       className="rounded-xl border border-gray-100 bg-white/80 px-4 py-4 shadow-sm transition-all duration-200 hover:shadow-md sm:flex sm:items-center sm:justify-between"
     >
       <div className="space-y-1">
-        <div className="text-lg font-semibold text-gray-900">
-          {s.firstName} {s.lastName}
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 font-semibold flex-shrink-0">
+            <span className="text-sm leading-none">{(s.firstName?.[0] || '') + (s.lastName?.[0] || '')}</span>
+          </div>
+          <div className="min-w-0">
+            <div className="text-lg font-semibold text-gray-900 truncate">{s.firstName} {s.lastName}</div>
+            <div className="text-sm text-gray-500 truncate">{s.email}</div>
+          </div>
         </div>
-        <div className="text-sm text-gray-500">
-          {s.email}
-        </div>
-        <div className="text-sm font-medium text-indigo-600">
-          Class:{' '}
-          {typeof s.class === 'object' && s.class
-            ? s.class.name
-            : s.class || '—'}
+        <div className="flex flex-wrap gap-4 mt-1 text-sm">
+          <div className="text-sm font-medium text-indigo-600">Class: {typeof s.class === 'object' && s.class ? s.class.name : s.class || '—'}</div>
+          <div className="text-sm text-gray-600">Roll No: {s.rollNumber || '—'}</div>
+          <div className="text-sm text-gray-600">Phone: {s.phone || '—'}</div>
+          <div className="text-sm text-gray-600 truncate">Address: {s.address || '—'}</div>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2 sm:mt-0 sm:flex-nowrap sm:items-center">
@@ -45,14 +48,17 @@ function StudentRow({ s, onEdit, onDelete }) {
 
 export default function Students() {
   const [students, setStudents] = useState([])
+  const [query, setQuery] = useState('')
   const [classes, setClasses] = useState([])
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
     email: '',
     class: '',
-    username: '',
     password: '',
+    phone: '',
+    rollNumber: '',
+    address: ''
   })
   const [editing, setEditing] = useState(null)
 
@@ -75,6 +81,14 @@ export default function Students() {
     loadClasses()
   }, [])
 
+  const filteredStudents = students.filter((s) => {
+    const q = (query || '').toLowerCase().trim()
+    if (!q) return true
+    const className = typeof s.class === 'object' && s.class ? s.class.name : s.class || ''
+    const hay = `${s.firstName || ''} ${s.lastName || ''} ${s.email || ''} ${s.rollNumber || ''} ${s.phone || ''} ${s.address || ''} ${className}`.toLowerCase()
+    return hay.includes(q)
+  })
+
   const submit = async (e) => {
     e.preventDefault()
     try {
@@ -89,8 +103,10 @@ export default function Students() {
         lastName: '',
         email: '',
         class: '',
-        username: '',
         password: '',
+        phone: '',
+        rollNumber: '',
+        address: ''
       })
       load()
     } catch (err) {
@@ -108,6 +124,9 @@ export default function Students() {
       lastName: s.lastName,
       email: s.email,
       class: s.class?._id || s.class || '',
+      phone: s.phone || '',
+      rollNumber: s.rollNumber || '',
+      address: s.address || '',
     })
   }
 
@@ -140,8 +159,10 @@ export default function Students() {
                 lastName: '',
                 email: '',
                 class: '',
-                username: '',
                 password: '',
+                phone: '',
+                rollNumber: '',
+                address: ''
               })
             }}
             className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white shadow-sm transition-all duration-200 hover:bg-indigo-700 hover:shadow-md active:bg-indigo-800"
@@ -198,28 +219,37 @@ export default function Students() {
               ))}
             </select>
 
-            {!editing && (
-              <>
-                <input
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 transition-all"
-                  placeholder="Username (optional)"
-                  value={form.username}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, username: e.target.value }))
-                  }
-                />
-                <input
-                  type="password"
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 transition-all"
-                  placeholder="Password (optional)"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, password: e.target.value }))
-                  }
-                />
-              </>
-            )}
+            <input
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 transition-all"
+              placeholder="Phone"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+            />
 
+            <input
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 transition-all"
+              placeholder="Roll Number"
+              value={form.rollNumber}
+              onChange={(e) => setForm((f) => ({ ...f, rollNumber: e.target.value }))}
+            />
+
+            <input
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 transition-all md:col-span-3"
+              placeholder="Address"
+              value={form.address}
+              onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+            />
+
+            {/* Password only (username removed — login will use email) */}
+            <input
+              type="password"
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 transition-all"
+              placeholder={editing ? 'Password (leave blank to keep)' : 'Password (optional)'}
+              value={form.password}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, password: e.target.value }))
+              }
+            />
             <div className="md:col-span-3 flex justify-end">
               <button
                 type="submit"
@@ -234,17 +264,25 @@ export default function Students() {
 
         {/* Students List */}
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
-          <h3 className="mb-4 text-xl font-semibold text-gray-800">
-            All Students
-          </h3>
-          {students.length === 0 ? (
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-xl font-semibold text-gray-800">All Students</h3>
+            <div className="w-64">
+              <input
+                placeholder="Search students (name, email, roll, phone, class, address...)"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100"
+              />
+            </div>
+          </div>
+          {filteredStudents.length === 0 ? (
             <div className="py-10 text-center text-gray-500">
               No students found.
             </div>
           ) : (
             <div className="space-y-3">
               <AnimatePresence>
-                {students.map((s) => (
+                {filteredStudents.map((s) => (
                   <StudentRow
                     key={s._id}
                     s={s}

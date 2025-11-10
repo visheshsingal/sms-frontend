@@ -5,7 +5,8 @@ import { NotebookPen, CalendarDays, Loader2, ClipboardList } from 'lucide-react'
 
 export default function TeacherAssignments() {
   const [assignments, setAssignments] = useState([])
-  const [form, setForm] = useState({ title: '', description: '', dueDate: '' })
+  const [form, setForm] = useState({ title: '', description: '', dueDate: '', classId: '' })
+  const [editing, setEditing] = useState(null)
   const [assignedClass, setAssignedClass] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -46,12 +47,35 @@ export default function TeacherAssignments() {
         toast.error('Class ID required')
         return
       }
-      await API.post('/teacher/assignments', form)
+      if (editing) {
+        await API.put(`/teacher/assignments/${editing}`, form)
+        setEditing(null)
+      } else {
+        await API.post('/teacher/assignments', form)
+      }
       setForm({ title: '', description: '', dueDate: '' })
       load()
       toast.success('Assignment created successfully')
     } catch (err) {
       toast.error('Failed to create assignment')
+      console.error(err)
+    }
+  }
+
+  const onEdit = (a) => {
+    setEditing(a._id)
+    setForm({ title: a.title || '', description: a.description || '', dueDate: a.dueDate ? new Date(a.dueDate).toISOString().slice(0,10) : '', classId: a.classId })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const onDelete = async (id) => {
+    if (!confirm('Delete this assignment?')) return
+    try {
+      await API.delete(`/teacher/assignments/${id}`)
+      toast.success('Assignment deleted')
+      load()
+    } catch (err) {
+      toast.error('Failed to delete assignment')
       console.error(err)
     }
   }
@@ -166,14 +190,18 @@ export default function TeacherAssignments() {
                           </div>
                         </div>
 
-                        <div
-                          className={`text-xs font-medium px-3 py-1 rounded-lg ${
-                            overdue
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-green-100 text-green-700'
-                          }`}
-                        >
-                          {overdue ? 'Overdue' : 'Active'}
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => onEdit(a)} className="text-sm text-indigo-600 hover:underline">Edit</button>
+                          <button onClick={() => onDelete(a._id)} className="text-sm text-red-600 hover:underline">Delete</button>
+                          <div
+                            className={`text-xs font-medium px-3 py-1 rounded-lg ${
+                              overdue
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-green-100 text-green-700'
+                            }`}
+                          >
+                            {overdue ? 'Overdue' : 'Active'}
+                          </div>
                         </div>
                       </div>
                     </div>

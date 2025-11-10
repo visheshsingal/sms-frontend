@@ -44,12 +44,20 @@ function DriverRow({ d, onEdit, onDelete }) {
 
 export default function Drivers() {
   const [drivers, setDrivers] = useState([])
+  const [query, setQuery] = useState('')
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', licenseNumber: '', username: '', password: '' })
   const [editing, setEditing] = useState(null)
 
   const load = async () => { const res = await API.get('/admin/drivers'); setDrivers(res.data) }
 
   useEffect(() => { load() }, [])
+
+  const filteredDrivers = drivers.filter((d) => {
+    const q = (query || '').toLowerCase().trim()
+    if (!q) return true
+    const hay = `${d.firstName || ''} ${d.lastName || ''} ${d.email || ''} ${d.phone || ''} ${d.licenseNumber || ''}`.toLowerCase()
+    return hay.includes(q)
+  })
 
   const submit = async (e) => {
     e.preventDefault()
@@ -58,7 +66,8 @@ export default function Drivers() {
         await API.put(`/admin/drivers/${editing._id}`, form)
         setEditing(null)
       } else {
-        if (!form.username || !form.password) { alert('Please provide username and password for driver'); return }
+        // Allow creating drivers without credentials. If admin provides a password but no username,
+        // server will derive a username from the email local-part and create the linked User.
         await API.post('/admin/drivers', form)
       }
       setForm({ firstName: '', lastName: '', email: '', phone: '', licenseNumber: '', username: '', password: '' })
@@ -92,12 +101,20 @@ export default function Drivers() {
             <input placeholder="Phone" value={form.phone} onChange={(e)=>setForm(f=>({...f, phone:e.target.value}))} className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
             <input placeholder="License Number" value={form.licenseNumber} onChange={(e)=>setForm(f=>({...f, licenseNumber:e.target.value}))} className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
 
-            {!editing && (
-              <>
-                <input placeholder="Username" value={form.username} onChange={(e)=>setForm(f=>({...f, username:e.target.value}))} required className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
-                <input type="password" placeholder="Password" value={form.password} onChange={(e)=>setForm(f=>({...f, password:e.target.value}))} required className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
-              </>
-            )}
+            {/* Username/password editable for both create and edit. When editing, leave blank to keep current credentials. */}
+            <input
+              placeholder={editing ? 'Username (leave blank to keep)' : 'Username (optional)'}
+              value={form.username}
+              onChange={(e)=>setForm(f=>({...f, username:e.target.value}))}
+              className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+            />
+            <input
+              type="password"
+              placeholder={editing ? 'Password (leave blank to keep)' : 'Password (optional)'}
+              value={form.password}
+              onChange={(e)=>setForm(f=>({...f, password:e.target.value}))}
+              className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+            />
 
             <div className="md:col-span-3 flex justify-end">
               <button type="submit" className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white shadow-sm transition hover:bg-indigo-700">
@@ -108,8 +125,18 @@ export default function Drivers() {
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
-          <h3 className="text-xl font-semibold mb-4">All Drivers</h3>
-          {drivers.length === 0 ? <div className="text-gray-500">No drivers yet.</div> : <div className="space-y-3">{drivers.map(d=> <DriverRow key={d._id} d={d} onEdit={onEdit} onDelete={onDelete} />)}</div>}
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-xl font-semibold">All Drivers</h3>
+            <div className="w-64">
+              <input
+                placeholder="Search drivers (name, email, phone, license...)"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100"
+              />
+            </div>
+          </div>
+          {filteredDrivers.length === 0 ? <div className="text-gray-500">No drivers found.</div> : <div className="space-y-3">{filteredDrivers.map(d=> <DriverRow key={d._id} d={d} onEdit={onEdit} onDelete={onDelete} />)}</div>}
         </div>
       </div>
     </div>
