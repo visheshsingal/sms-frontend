@@ -157,8 +157,8 @@ export default function TeacherTimetable() {
                   key={t._id}
                   className="border border-gray-200 rounded-xl p-5 bg-white hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                    <div className="flex-1">
                       {t.content.startsWith('http') ? (
                         <a
                           href={t.content}
@@ -180,7 +180,7 @@ export default function TeacherTimetable() {
                         </div>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 whitespace-nowrap">
                       {new Date(t.createdAt).toLocaleString()}
                     </div>
                   </div>

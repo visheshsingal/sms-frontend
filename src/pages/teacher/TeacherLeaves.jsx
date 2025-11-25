@@ -96,7 +96,7 @@ export default function TeacherLeaves() {
                   key={l._id}
                   className="border border-gray-200 rounded-xl p-5 bg-white hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                     <div>
                       <div className="font-semibold text-gray-900">
                         {l.studentId
@@ -110,7 +110,7 @@ export default function TeacherLeaves() {
                     </div>
 
                     <div
-                      className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                      className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusColor(
                         l.status
                       )}`}
                     >
@@ -129,16 +129,16 @@ export default function TeacherLeaves() {
                   )}
 
                   {l.status === 'pending' && (
-                    <div className="mt-4 flex gap-3">
+                    <div className="mt-4 flex flex-col sm:flex-row gap-3">
                       <button
                         onClick={() => review(l._id, 'approved')}
-                        className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
+                        className="w-full sm:w-auto flex items-center gap-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
                       >
                         <CheckCircle2 className="w-4 h-4" /> Approve
                       </button>
                       <button
                         onClick={() => review(l._id, 'rejected')}
-                        className="flex items-center gap-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition"
+                        className="w-full sm:w-auto flex items-center gap-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition"
                       >
                         <XCircle className="w-4 h-4" /> Reject
                       </button>

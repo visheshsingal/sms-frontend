@@ -168,7 +168,7 @@ export default function TeacherProgress() {
                   setForm((f) => ({ ...f, outOf: e.target.value }))
                 }
                 placeholder="Out Of"
-                className="w-32 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="w-full sm:w-32 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
               />
             </div>
 
@@ -203,11 +203,11 @@ export default function TeacherProgress() {
             </h4>
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
             <select
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full sm:w-auto px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
             >
               <option value="">Load student records</option>
               {students.map((s) => (
@@ -218,7 +218,7 @@ export default function TeacherProgress() {
             </select>
             <button
               onClick={load}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
             >
               Load
             </button>

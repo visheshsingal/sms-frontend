@@ -7,6 +7,8 @@ export default function DriverSidebar({ driver, bus, className = '', onClose }){
     { to: '/driver/profile', label: 'Profile', icon: User },
     { to: '/driver/dashboard', label: 'Assigned Bus', icon: Bus },
     { to: '/driver/route', label: 'Route', icon: MapPin },
+    { to: '/driver/qr-scanner', label: 'Scanner', icon: ClipboardList },
+    { to: '/driver/attendance', label: 'Manual Attendance', icon: ClipboardList },
     { to: '/driver/notices', label: 'Notices', icon: ClipboardList }
   ]
 

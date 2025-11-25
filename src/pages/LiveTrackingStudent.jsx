@@ -50,7 +50,7 @@ export default function LiveTrackingStudent(){
       {!routeInfo ? <div className="text-sm text-gray-600">No bus/route assigned to you.</div> : (
         <div>
           <div className="font-semibold">{routeInfo.route.name}</div>
-          {live && live.lastLocation ? (
+          {live && live.lastLocation && isFinite(Number(live.lastLocation.lat)) && isFinite(Number(live.lastLocation.lng)) ? (
             <div className="relative z-0 mt-4 overflow-hidden rounded border">
               <div className="p-3 text-xs text-gray-600">Last updated: {live.updatedAt ? new Date(live.updatedAt).toLocaleString() : ''}</div>
               <MapContainer className="z-0" center={[Number(live.lastLocation.lat), Number(live.lastLocation.lng)]} zoom={15} style={{ height: 360, width: '100%', zIndex: 0 }}>
@@ -60,7 +60,7 @@ export default function LiveTrackingStudent(){
                 </CircleMarker>
               </MapContainer>
             </div>
-          ) : <div className="text-sm text-gray-600 mt-4">No live location yet.</div>}
+          ) : <div className="text-sm text-gray-600 mt-4">No live location yet or invalid coordinates.</div>}
         </div>
       )}
     </div>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Edit2, Trash2, PlusCircle, Save, GraduationCap } from 'lucide-react'
 import API from '../utils/api'
 
-function StudentRow({ s, onEdit, onDelete }) {
+function StudentRow({ s, onEdit, onDelete, onViewQR }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
@@ -41,6 +41,12 @@ function StudentRow({ s, onEdit, onDelete }) {
         >
           <Trash2 size={14} /> Delete
         </button>
+        <button
+          onClick={() => onViewQR(s)}
+          className="flex w-full items-center justify-center gap-1 rounded-lg border border-indigo-300 px-3 py-2 text-sm font-medium text-indigo-600 transition-all duration-200 hover:bg-indigo-50 sm:w-auto"
+        >
+          <GraduationCap size={14} /> QR
+        </button>
       </div>
     </motion.div>
   )
@@ -61,6 +67,7 @@ export default function Students() {
     address: ''
   })
   const [editing, setEditing] = useState(null)
+  const [qrModal, setQrModal] = useState({ open: false, student: null, raw: null, loading: false, error: null })
 
   const load = async () => {
     const res = await API.get('/admin/students')
@@ -128,6 +135,26 @@ export default function Students() {
       rollNumber: s.rollNumber || '',
       address: s.address || '',
     })
+  }
+
+  const onViewQR = async (s) => {
+    // open modal and either construct raw payload or call generate endpoint if no token
+    setQrModal({ open: true, student: s, raw: null, loading: true, error: null })
+    try{
+      if (s.qrToken){
+        const payload = { studentId: s._id, token: s.qrToken, rollNumber: s.rollNumber || null, className: s.class ? (s.class.name || s.class) : null }
+        const raw = btoa(JSON.stringify(payload))
+        setQrModal({ open: true, student: s, raw, loading: false, error: null })
+      } else {
+        // generate via admin endpoint
+        const res = await API.post(`/qr/generate/${s._id}`)
+        setQrModal({ open: true, student: s, raw: res.data.raw, loading: false, error: null })
+        // reload students so UI shows token afterwards
+        load()
+      }
+    }catch(err){
+      setQrModal({ open: true, student: s, raw: null, loading: false, error: err?.response?.data?.message || err.message || 'Failed to get QR' })
+    }
   }
 
   const onDelete = async (id) => {
@@ -264,9 +291,9 @@ export default function Students() {
 
         {/* Students List */}
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
-          <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <h3 className="text-xl font-semibold text-gray-800">All Students</h3>
-            <div className="w-64">
+            <div className="w-full sm:w-64">
               <input
                 placeholder="Search students (name, email, roll, phone, class, address...)"
                 value={query}
@@ -288,12 +315,38 @@ export default function Students() {
                     s={s}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onViewQR={onViewQR}
                   />
                 ))}
               </AnimatePresence>
             </div>
           )}
         </div>
+        {/* QR Modal */}
+        {qrModal.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-lg">
+              <div className="flex items-start justify-between">
+                <h3 className="text-lg font-semibold">Student QR</h3>
+                <button onClick={()=>setQrModal({ open: false, student: null, raw: null, loading: false, error: null })} className="text-gray-500">Close</button>
+              </div>
+              <div className="mt-4">
+                {qrModal.loading ? (
+                  <div>Loading...</div>
+                ) : qrModal.error ? (
+                  <div className="text-red-600">{qrModal.error}</div>
+                ) : qrModal.raw ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrModal.raw)}&size=300x300`} alt="QR" className="w-48 h-48 bg-white p-2 rounded-md" />
+                    <div className="text-sm text-gray-600">Roll: {qrModal.student.rollNumber || '—'}{qrModal.student.class ? ` • Class: ${typeof qrModal.student.class === 'object' ? qrModal.student.class.name : qrModal.student.class}` : ''}</div>
+                  </div>
+                ) : (
+                  <div className="text-gray-600">No QR available</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -72,7 +72,7 @@ export default function LiveTrackingDriver(){
           )}
           {error ? <div className="text-sm text-red-600">{error}</div> : null}
         </div>
-        {live && live.lastLocation ? (
+        {live && live.lastLocation && isFinite(Number(live.lastLocation.lat)) && isFinite(Number(live.lastLocation.lng)) ? (
           <div className="relative z-0 mt-4 overflow-hidden rounded border">
             <div className="p-3 text-xs text-gray-600">Last updated: {live.updatedAt ? new Date(live.updatedAt).toLocaleString() : ''}</div>
             <MapContainer className="z-0" center={[Number(live.lastLocation.lat), Number(live.lastLocation.lng)]} zoom={15} style={{ height: 360, width: '100%', zIndex: 0 }}>
@@ -82,7 +82,7 @@ export default function LiveTrackingDriver(){
               </CircleMarker>
             </MapContainer>
           </div>
-        ) : null}
+        ) : <div className="text-sm text-gray-600">No live location available yet.</div>}
       </div>
     </div>
   )

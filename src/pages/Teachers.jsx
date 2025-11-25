@@ -308,9 +308,9 @@ export default function Teachers() {
 
         {/* Teachers List */}
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <h2 className="text-xl font-semibold text-gray-900">All Teachers</h2>
-            <div className="w-64">
+            <div className="w-full sm:w-64">
               <input
                 placeholder="Search teachers (name, email, dept, phone...)"
                 value={query}

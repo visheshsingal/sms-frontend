@@ -183,7 +183,7 @@ export default function Classes() {
                     setNewSubjects(copy)
                   }}
                   placeholder="Subject name"
-                  className="px-3 py-2 border border-gray-300 rounded w-1/3"
+                  className="px-3 py-2 border border-gray-300 rounded w-full sm:w-1/3"
                 />
                 <div className="flex-1">
                   <TeacherMultiSelect
@@ -348,7 +348,7 @@ export default function Classes() {
                               setEditingSubjects(copy)
                             }}
                             placeholder="Subject name"
-                            className="px-3 py-2 border border-gray-300 rounded w-1/3"
+                            className="px-3 py-2 border border-gray-300 rounded w-full sm:w-1/3"
                           />
                           <div className="flex-1">
                             <TeacherMultiSelect

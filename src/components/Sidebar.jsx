@@ -26,6 +26,7 @@ const items = [
   // Finance temporarily removed from sidebar. Uncomment if needed later:
   // { to: '/admin/finance', label: 'Finance', icon: DollarSign },
   { to: '/admin/attendance', label: 'Mark Attendance', icon: ClipboardList },
+  { to: '/admin/bus-attendance', label: 'Bus Attendance', icon: Bus },
   { to: '/admin/attendance-report', label: 'Attendance Report', icon: FileText },
   { to: '/admin/notices', label: 'Notices', icon: Bell },
 ]

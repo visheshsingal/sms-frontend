@@ -19,6 +19,8 @@ export default function LiveTrackingAdmin(){
     return ()=>{ if (poll) clearInterval(poll) }
   }, [selected])
 
+  const validLocation = live && live.lastLocation && isFinite(Number(live.lastLocation.lat)) && isFinite(Number(live.lastLocation.lng))
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Live Tracking (Admin)</h2>
@@ -29,7 +31,7 @@ export default function LiveTrackingAdmin(){
           {buses.map(b=> <option key={b._id} value={b._id}>{b.number} {b.route && b.route.name ? `— ${b.route.name}` : ''}</option>)}
         </select>
       </div>
-      {live && live.lastLocation ? (
+      {validLocation ? (
         <div className="relative z-0 overflow-hidden rounded border">
           <div className="p-3 text-xs text-gray-600">Last updated: {live.updatedAt ? new Date(live.updatedAt).toLocaleString() : ''}</div>
           <MapContainer className="z-0" center={[Number(live.lastLocation.lat), Number(live.lastLocation.lng)]} zoom={14} style={{ height: 420, width: '100%', zIndex: 0 }}>
@@ -40,7 +42,7 @@ export default function LiveTrackingAdmin(){
           </MapContainer>
         </div>
       ) : (
-        <div className="text-sm text-gray-600">Select a bus to view live location</div>
+        <div className="text-sm text-gray-600">Select a bus to view live location (no valid coordinates yet)</div>
       )}
     </div>
   )

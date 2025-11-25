@@ -110,39 +110,41 @@ export default function TeacherAttendance() {
           </div>
 
           {/* Filter Controls */}
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <label>Start</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-2 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-            <label>End</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-2 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-            <button
-              onClick={load}
-              className="px-4 py-1.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
-            >
-              Load
-            </button>
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 text-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+              <label className="sr-only">Start</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full sm:w-auto px-2 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+              <label className="sr-only">End</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full sm:w-auto px-2 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+              <button
+                onClick={load}
+                className="w-full sm:w-auto px-4 py-1.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
+              >
+                Load
+              </button>
+            </div>
 
-            <div className="flex items-center gap-2 ml-4">
-              <label>Mark for</label>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+              <label className="sr-only">Mark for</label>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-2 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="w-full sm:w-auto px-2 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
               />
               <button
                 onClick={() => loadAttendanceForDate(selectedDate)}
-                className="px-3 py-1.5 rounded-lg border border-indigo-500 text-indigo-600 hover:bg-indigo-50 transition"
+                className="w-full sm:w-auto px-3 py-1.5 rounded-lg border border-indigo-500 text-indigo-600 hover:bg-indigo-50 transition"
               >
                 Fetch
               </button>
@@ -292,26 +294,64 @@ export default function TeacherAttendance() {
               No class assigned.
             </div>
           ) : (
-            <div>
-              <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-                <thead className="bg-indigo-600 text-white text-sm">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Roll</th>
-                    <th className="px-4 py-2 text-left">Name</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
+              <div>
+                {/* Desktop/tablet: table view */}
+                <div className="hidden sm:block overflow-x-auto rounded-lg border border-gray-200">
+                  <table className="min-w-full table-auto rounded-lg overflow-hidden">
+                    <thead className="bg-indigo-600 text-white text-sm">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Roll</th>
+                        <th className="px-4 py-2 text-left">Name</th>
+                        <th className="px-4 py-2 text-left">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {students.map((s) => (
+                        <tr key={s._id} className="hover:bg-indigo-50 transition">
+                          <td className="px-4 py-2 text-sm">{s.rollNo || '-'}</td>
+                          <td className="px-4 py-2 text-sm">{s.name}</td>
+                          <td className="px-4 py-2 text-sm">
+                            <select
+                              value={
+                                attendanceRecords.find(
+                                  (ar) => ar.studentId === s._id
+                                )?.status || 'present'
+                              }
+                              onChange={(e) =>
+                                setAttendanceRecords((prev) =>
+                                  prev.map((r) =>
+                                    r.studentId === s._id
+                                      ? { ...r, status: e.target.value }
+                                      : r
+                                  )
+                                )
+                              }
+                              className="w-full sm:w-auto px-2 py-1 border rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                            >
+                              <option value="present">Present</option>
+                              <option value="absent">Absent</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile: stacked list view for touch */}
+                <div className="block sm:hidden space-y-3">
                   {students.map((s) => (
-                    <tr key={s._id} className="hover:bg-indigo-50 transition">
-                      <td className="px-4 py-2 text-sm">{s.rollNo || '-'}</td>
-                      <td className="px-4 py-2 text-sm">{s.name}</td>
-                      <td className="px-4 py-2 text-sm">
+                    <div key={s._id} className="bg-white border rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-gray-900">{s.name}</div>
+                        <div className="text-sm text-gray-500">{s.rollNo || '-'}</div>
+                      </div>
+                      <div className="mt-3">
+                        <label className="sr-only">Status</label>
                         <select
                           value={
-                            attendanceRecords.find(
-                              (ar) => ar.studentId === s._id
-                            )?.status || 'present'
+                            attendanceRecords.find((ar) => ar.studentId === s._id)
+                              ?.status || 'present'
                           }
                           onChange={(e) =>
                             setAttendanceRecords((prev) =>
@@ -322,18 +362,17 @@ export default function TeacherAttendance() {
                               )
                             )
                           }
-                          className="px-2 py-1 border rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                          className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none"
                         >
                           <option value="present">Present</option>
                           <option value="absent">Absent</option>
                         </select>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
 
-              <div className="mt-4 flex gap-3">
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={async () => {
                     try {
@@ -356,7 +395,7 @@ export default function TeacherAttendance() {
                       alert(err?.response?.data?.msg || err.message)
                     }
                   }}
-                  className="px-5 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
+                  className="w-full sm:w-auto px-5 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
                 >
                   {editingAttendanceId ? 'Update Attendance' : 'Save Attendance'}
                 </button>
@@ -371,7 +410,7 @@ export default function TeacherAttendance() {
                     )
                     setEditingAttendanceId(null)
                   }}
-                  className="px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+                  className="w-full sm:w-auto px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
                 >
                   Reset
                 </button>

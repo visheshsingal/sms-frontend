@@ -12,6 +12,7 @@ import Teachers from './pages/Teachers'
 import Drivers from './pages/Drivers'
 import Buses from './pages/Buses'
 import Classes from './pages/Classes'
+import BusAttendance from './pages/admin/BusAttendance'
 import RoutesPage from './pages/Routes'
 import StudentAuth from './pages/StudentAuth'
 import DriverAuth from './pages/DriverAuth'
@@ -20,8 +21,10 @@ import DriverDashboard from './pages/DriverDashboard'
 import DriverProfile from './pages/DriverProfile'
 import DriverRoute from './pages/DriverRoute'
 import LiveTrackingDriver from './pages/LiveTrackingDriver'
+import DriverAttendance from './pages/driver/DriverAttendance'
 import StudentLayout from './layouts/StudentLayout'
 import StudentProfile from './pages/student/Profile'
+import MyQR from './pages/student/MyQR'
 import StudentTransport from './pages/student/Transport'
 import StudentAttendanceReport from './pages/student/AttendanceReport'
 import StudentProgress from './pages/student/Progress'
@@ -41,6 +44,7 @@ import TeacherTimetable from './pages/teacher/TeacherTimetable'
 import TeacherProgress from './pages/teacher/TeacherProgress'
 import TeacherLeaves from './pages/teacher/TeacherLeaves'
 import StudentProgressReport from './pages/teacher/StudentProgressReport'
+import QRScanner from './pages/QRScanner'
 import Attendance from './pages/Attendance.jsx'
 import AttendanceReport from './pages/AttendanceReport.jsx'
 
@@ -62,6 +66,7 @@ export default function App(){
           <Route path='classes' element={<Classes/>} />
           <Route path='buses' element={<Buses/>} />
           <Route path='routes' element={<RoutesPage/>} />
+          <Route path='bus-attendance' element={<BusAttendance/>} />
           {/* Finance section temporarily hidden — comment out for now. Can re-enable later by restoring the import and this route. */}
           {/* <Route path='finance' element={<Finance/>} /> */}
           <Route path='attendance' element={<Attendance/>} />
@@ -77,10 +82,13 @@ export default function App(){
           <Route path='live' element={<LiveTrackingDriver/>} />
           <Route path='profile' element={<DriverProfile/>} />
           <Route path='route' element={<DriverRoute/>} />
+          <Route path='qr-scanner' element={<QRScanner/>} />
+          <Route path='attendance' element={<DriverAttendance/>} />
           <Route path='notices' element={<Notices/>} />
         </Route>
         <Route path='/student/*' element={<StudentLayout/>}>
           <Route path='profile' element={<StudentProfile/>} />
+          <Route path='qr' element={<MyQR/>} />
           <Route path='live' element={<LiveTrackingStudent/>} />
           <Route path='transport' element={<StudentTransport/>} />
           <Route path='attendance-report' element={<StudentAttendanceReport/>} />
@@ -99,6 +107,7 @@ export default function App(){
           <Route path='timetable' element={<TeacherTimetable/>} />
           <Route path='notices' element={<Notices/>} />
           <Route path='progress' element={<TeacherProgress/>} />
+          <Route path='qr-scanner' element={<QRScanner/>} />
           <Route path='leaves' element={<TeacherLeaves/>} />
           <Route path='progress/:studentId/report' element={<StudentProgressReport/>} />
         </Route>

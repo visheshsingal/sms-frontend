@@ -112,7 +112,6 @@ export default function NavBar(){
                   </button>
                   {loginOpen && (
                     <div className="absolute right-0 mt-2 w-44 rounded-lg border border-gray-100 bg-white py-2 text-sm shadow-lg">
-                      <Link to="/admin" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Admin</Link>
                         <Link to={role === 'admin' ? '/admin/dashboard' : '/admin'} className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Admin</Link>
                         <Link to={role === 'student' ? '/student/profile' : '/student'} className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Student</Link>
                         <Link to={role === 'teacher' ? '/teacher/dashboard' : '/teacher'} className="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Teacher</Link>

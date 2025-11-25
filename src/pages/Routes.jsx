@@ -25,6 +25,23 @@ export default function Routes() {
 
   const addStop = () => setForm(f => ({ ...f, stops: [...(f.stops||[]), { address: '', time: '', students: [] }] }))
 
+  const toggleStudentInStop = (stopIdx, studentId) => {
+    setForm(f => {
+      const copy = { ...f };
+      copy.stops = copy.stops ? [...copy.stops] : [];
+      const stop = { ...copy.stops[stopIdx] };
+      const list = Array.isArray(stop.students) ? [...stop.students] : [];
+      const sid = String(studentId);
+      if (list.map(x=>String(x)).includes(sid)) {
+        stop.students = list.filter(x => String(x) !== sid);
+      } else {
+        stop.students = [...list, sid];
+      }
+      copy.stops[stopIdx] = stop;
+      return copy;
+    })
+  }
+
   const save = async (e) => {
     e.preventDefault()
     try {
@@ -70,11 +87,21 @@ export default function Routes() {
                 <label className="block text-sm font-medium mb-2">Stops</label>
                 {(form.stops||[]).map((s, idx) => (
                   <div key={idx} className="flex gap-2 mb-2 items-start">
-                    <input value={s.address} onChange={e=>{ const copy = [...form.stops]; copy[idx].address = e.target.value; setForm(f=>({...f, stops: copy})) }} placeholder="Address" className="px-3 py-2 border rounded w-1/3" />
-                    <input type="time" value={s.time||''} onChange={e=>{ const copy=[...form.stops]; copy[idx].time = e.target.value; setForm(f=>({...f, stops: copy})) }} className="px-3 py-2 border rounded w-40" />
-                    <select multiple value={s.students||[]} onChange={e=>{ const opts = Array.from(e.target.selectedOptions).map(o=>o.value); const copy=[...form.stops]; copy[idx].students = opts; setForm(f=>({...f, stops: copy})) }} className="flex-1 px-3 py-2 border rounded">
-                      {students.map(st=> <option key={st._id} value={st._id}>{st.firstName} {st.lastName}</option>)}
-                    </select>
+                    <input value={s.address} onChange={e=>{ const copy = [...form.stops]; copy[idx].address = e.target.value; setForm(f=>({...f, stops: copy})) }} placeholder="Address" className="px-3 py-2 border rounded w-full sm:w-1/3" />
+                    <input type="time" value={s.time||''} onChange={e=>{ const copy=[...form.stops]; copy[idx].time = e.target.value; setForm(f=>({...f, stops: copy})) }} className="px-3 py-2 border rounded w-full sm:w-40" />
+                    <div className="flex-1 px-3 py-2 border rounded max-h-40 overflow-auto">
+                      {students.map(st=> (
+                        <label key={st._id} className="flex items-center gap-2 py-1">
+                          <input
+                            type="checkbox"
+                            checked={Array.isArray(s.students) ? s.students.map(x=>String(x)).includes(String(st._id)) : false}
+                            onChange={() => toggleStudentInStop(idx, st._id)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm">{st.firstName} {st.lastName}</span>
+                        </label>
+                      ))}
+                    </div>
                     <button type="button" onClick={()=>{ setForm(f=>({...f, stops: f.stops.filter((_,i)=>i!==idx)})) }} className="px-3 py-1 bg-red-100 rounded">Remove</button>
                   </div>
                 ))}

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://sms-backend-ulr6.onrender.com/api'
+  // Default to backend port 5001 (server uses PORT=5001 by default)
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 });
 
 API.interceptors.request.use(config => {

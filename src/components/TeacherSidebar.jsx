@@ -10,6 +10,7 @@ import {
   BarChart3,
   FileText,
   Bell,
+  QrCode,
   X,
 } from 'lucide-react'
 
@@ -41,6 +42,7 @@ export default function TeacherSidebar({ className = '', onClose }) {
     { to: '/teacher/progress', label: 'Student Progress', icon: BarChart3 },
     { to: '/teacher/leaves', label: 'Leaves', icon: FileText },
   { to: '/teacher/notices', label: 'Notices', icon: Bell },
+  { to: '/teacher/qr-scanner', label: 'QR Scanner', icon: QrCode },
   ]
 
   return (

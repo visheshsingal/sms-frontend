@@ -68,43 +68,61 @@ export default function TeacherClass() {
 
         {/* Student List */}
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-semibold text-gray-900">Students</h4>
-            <div className="text-sm text-gray-500">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900">Students</h4>
+            </div>
+            <div className="text-sm text-gray-500 sm:ml-4 whitespace-nowrap">
               Showing {cls.students?.length || 0} enrolled students
             </div>
           </div>
 
           {cls.students && cls.students.length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-gray-200">
-              <table className="min-w-full text-sm text-left text-gray-700">
-                <thead className="bg-indigo-600 text-white text-sm uppercase">
-                  <tr>
-                    <th className="px-4 py-3">Roll No</th>
-                    <th className="px-4 py-3">Name</th>
-                    <th className="px-4 py-3">Email</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {cls.students.map((s, i) => (
-                    <tr
-                      key={s._id || i}
-                      className="hover:bg-indigo-50 transition-colors duration-150"
-                    >
-                      <td className="px-4 py-3 text-gray-700">
-                        {s.rollNumber || '—'}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {s.firstName} {s.lastName}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {s.email || '—'}
-                      </td>
+            <>
+              {/* Desktop / Tablet: table view */}
+              <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-200">
+                <table className="min-w-full table-auto text-sm text-left text-gray-700">
+                  <thead className="bg-indigo-600 text-white text-sm uppercase">
+                    <tr>
+                      <th className="px-4 py-3">Roll No</th>
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Email</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {cls.students.map((s, i) => (
+                      <tr
+                        key={s._id || i}
+                        className="hover:bg-indigo-50 transition-colors duration-150"
+                      >
+                        <td className="px-4 py-3 text-gray-700 whitespace-nowrap sm:whitespace-normal break-words">
+                          {s.rollNumber || '—'}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap sm:whitespace-normal break-words">
+                          {s.firstName} {s.lastName}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap sm:whitespace-normal break-words">
+                          {s.email || '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile: compact list view */}
+              <div className="block sm:hidden space-y-3">
+                {cls.students.map((s, i) => (
+                  <div key={s._id || i} className="bg-white border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium text-gray-900">{s.firstName} {s.lastName}</div>
+                      <div className="text-sm text-gray-500">{s.rollNumber || '—'}</div>
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1">{s.email || '—'}</div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">

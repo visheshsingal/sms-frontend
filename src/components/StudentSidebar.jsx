@@ -10,6 +10,7 @@ import {
   NotebookPen,
   Bell,
   MapPin,
+  QrCode,
   X,
 } from 'lucide-react'
 
@@ -39,6 +40,7 @@ export default function StudentSidebar({ studentClass = null, className = '', on
       label: `Attendance${assignedClass?.name ? ` (${assignedClass.name})` : ''}`,
       icon: FileText,
     },
+      { to: '/student/qr', label: 'My QR', icon: QrCode },
     { to: '/student/progress', label: 'Marks & Progress', icon: BarChart3 },
     { to: '/student/assignments', label: 'Assignments', icon: NotebookPen },
     { to: '/student/timetable', label: 'Timetable', icon: Calendar },

@@ -190,9 +190,9 @@ export default function TeacherAssignments() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => onEdit(a)} className="text-sm text-indigo-600 hover:underline">Edit</button>
-                          <button onClick={() => onDelete(a._id)} className="text-sm text-red-600 hover:underline">Delete</button>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                          <button onClick={() => onEdit(a)} className="w-full sm:w-auto text-sm text-indigo-600 hover:underline text-left sm:text-left">Edit</button>
+                          <button onClick={() => onDelete(a._id)} className="w-full sm:w-auto text-sm text-red-600 hover:underline text-left">Delete</button>
                           <div
                             className={`text-xs font-medium px-3 py-1 rounded-lg ${
                               overdue
