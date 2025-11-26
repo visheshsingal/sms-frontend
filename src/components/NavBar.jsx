@@ -159,20 +159,20 @@ export default function NavBar(){
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-2 text-sm">
-                <Link to="/admin" className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-indigo-50" onClick={() => setMobileOpen(false)}>
-                  <span>Admin Login</span>
+                <Link to={role === 'admin' ? '/admin/dashboard' : '/admin'} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-indigo-50" onClick={() => setMobileOpen(false)}>
+                  <span>Admin</span>
                   <User className="h-4 w-4 text-indigo-500" />
                 </Link>
-                <Link to="/student" className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-indigo-50" onClick={() => setMobileOpen(false)}>
-                  <span>Student Login</span>
+                <Link to={role === 'student' ? '/student/profile' : '/student'} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-indigo-50" onClick={() => setMobileOpen(false)}>
+                  <span>Student</span>
                   <Users className="h-4 w-4 text-indigo-500" />
                 </Link>
-                <Link to="/teacher" className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-indigo-50" onClick={() => setMobileOpen(false)}>
-                  <span>Teacher Login</span>
+                <Link to={role === 'teacher' ? '/teacher/dashboard' : '/teacher'} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-indigo-50" onClick={() => setMobileOpen(false)}>
+                  <span>Teacher</span>
                   <BookOpen className="h-4 w-4 text-indigo-500" />
                 </Link>
-                <Link to="/driver" className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-indigo-50" onClick={() => setMobileOpen(false)}>
-                  <span>Driver Login</span>
+                <Link to={role === 'driver' ? '/driver/dashboard' : '/driver'} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-indigo-50" onClick={() => setMobileOpen(false)}>
+                  <span>Driver</span>
                   <Bus className="h-4 w-4 text-indigo-500" />
                 </Link>
               </div>

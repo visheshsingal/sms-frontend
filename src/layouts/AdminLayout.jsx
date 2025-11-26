@@ -31,24 +31,37 @@ export default function AdminLayout(){
 
       <div className="flex">
         <Sidebar className="hidden lg:flex" />
+
         <div className="flex min-h-screen flex-1 flex-col">
-          <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm lg:hidden">
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
-              <p className="text-sm text-gray-500">Manage your institution</p>
+
+          {/* ✅ MOBILE HEADER — Hamburger + Text LEFT side together */}
+          <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm lg:hidden">
+
+            {/* LEFT SIDE WRAPPER */}
+            <div className="flex items-center gap-3">
+              {/* Hamburger */}
+              <button
+                type="button"
+                className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 shadow-sm hover:bg-gray-50"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open admin menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
+              {/* Text */}
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
+                <p className="text-sm text-gray-500">Manage your institution</p>
+              </div>
             </div>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 shadow-sm hover:bg-gray-50"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open admin menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
+
           </div>
+
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
             <Outlet />
           </main>
+
         </div>
       </div>
     </div>
