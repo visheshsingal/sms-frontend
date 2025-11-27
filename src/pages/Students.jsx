@@ -271,7 +271,7 @@ export default function Students() {
             <input
               type="password"
               className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none text-gray-900 transition-all"
-              placeholder={editing ? 'Password (leave blank to keep)' : 'Password (optional)'}
+              placeholder={editing ? 'Password (leave blank to keep)' : 'Password'}
               value={form.password}
               onChange={(e) =>
                 setForm((f) => ({ ...f, password: e.target.value }))

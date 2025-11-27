@@ -110,7 +110,7 @@ export default function Drivers() {
             />
             <input
               type="password"
-              placeholder={editing ? 'Password (leave blank to keep)' : 'Password (optional)'}
+              placeholder={editing ? 'Password (leave blank to keep)' : 'Password'}
               value={form.password}
               onChange={(e)=>setForm(f=>({...f, password:e.target.value}))}
               className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200"
