@@ -118,19 +118,33 @@ export default function QRScanner(){
 			await html5QrCode.start(
 				camId,
 				{ fps: 10, qrbox: 250 },
-				async (decodedText, decodedResult) => {
+					async (decodedText, decodedResult) => {
 					// stop after first successful scan
 					await stopScannerInternal(html5QrCode)
 					// send to server
 					try{
 							const res = await API.post('/qr/scan', { raw: decodedText })
-							// show detailed success
+							// server now returns previousAttendanceStatus / previousBusAttendanceStatus
 							const s = res.data.student
 							const att = res.data.attendance
-							setMessage({ type: 'success', text: res.data.message || 'Attendance recorded' })
-							const entry = { id: res.data.eventId, student: s, attendance: att, time: new Date().toISOString() }
-							setRecent(prev => {
-								const next = [entry].concat(prev).filter(Boolean).slice(0,8)
+							const prev = res.data.previousAttendanceStatus || res.data.previousBusAttendanceStatus || null
+
+							if (prev === 'present'){
+								setMessage({ type: 'info', text: 'Attendance already marked present' })
+							} else {
+								setMessage({ type: 'success', text: res.data.message || 'Attendance recorded' })
+							}
+
+							const entry = {
+								id: res.data.eventId,
+								student: s,
+								attendance: att,
+								time: new Date().toISOString(),
+								marked: prev === 'present' ? 'already' : 'marked'
+							}
+
+							setRecent(prevArr => {
+								const next = [entry].concat(prevArr).filter(Boolean).slice(0,8)
 								persistRecent(next)
 								return next
 							})
@@ -202,7 +216,9 @@ export default function QRScanner(){
 											<div className="font-semibold">{r.student.firstName} {r.student.lastName} {r.student.rollNumber ? `• Roll: ${r.student.rollNumber}` : ''}</div>
 											<div className="text-xs text-gray-500">{r.student.className || ''} • {new Date(r.time).toLocaleString()}</div>
 										</div>
-										<div className="text-xs text-green-600">Marked</div>
+										<div className={`text-xs ${r.marked === 'already' ? 'text-yellow-600' : 'text-green-600'}`}>
+											{r.marked === 'already' ? 'Already marked' : 'Marked'}
+										</div>
 									</div>
 								))}
 						</div>
