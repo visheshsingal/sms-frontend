@@ -31,7 +31,7 @@ export default function BusInchargeLayout() {
             <div className="flex">
                 <BusInchargeSidebar className="hidden lg:flex" />
 
-                <div className="flex min-h-screen flex-1 flex-col lg:pl-64">
+                <div className="flex min-h-screen flex-1 flex-col">
                     {/* Mobile Header */}
                     <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm lg:hidden">
                         <div className="flex items-center gap-3">
@@ -44,7 +44,11 @@ export default function BusInchargeLayout() {
                     </div>
 
                     {/* Desktop Header */}
-                    <header className="hidden lg:flex items-center justify-end px-8 py-4 bg-white border-b border-gray-200 shadow-sm">
+                    <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200 shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <span className="font-bold text-gray-800">Bus Incharge</span>
+                        </div>
+
                         <div className="flex items-center gap-4">
                             <span className="text-sm text-gray-600 font-medium">Welcome, Incharge</span>
                             <div className="h-6 w-px bg-gray-200"></div>
