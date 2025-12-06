@@ -47,15 +47,15 @@ export default function StudentProfile() {
                   onClick={() => {
                     setError(null)
                     setData(null)
-                    // retry: re-run effect by calling load directly
-                    ;(async () => {
-                      try {
-                        const res = await API.get('/student/me')
-                        setData(res.data)
-                      } catch (err) {
-                        setError(err?.response?.data?.message || err.message || 'Network error')
-                      }
-                    })()
+                      // retry: re-run effect by calling load directly
+                      ; (async () => {
+                        try {
+                          const res = await API.get('/student/me')
+                          setData(res.data)
+                        } catch (err) {
+                          setError(err?.response?.data?.message || err.message || 'Network error')
+                        }
+                      })()
                   }}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-md"
                 >
@@ -81,20 +81,29 @@ export default function StudentProfile() {
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 hover:shadow-lg transition-all duration-300">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 to-indigo-700 flex items-center justify-center text-white font-bold text-3xl shadow-md">
-            {student.firstName?.[0]}
-            {student.lastName?.[0]}
+          <div className="w-32 h-32 rounded-full bg-indigo-50 border-4 border-indigo-100 overflow-hidden flex items-center justify-center text-indigo-600 font-bold text-4xl shadow-md">
+            {student.profileImage ? (
+              <img src={student.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              (student.firstName?.[0] || '') + (student.lastName?.[0] || '')
+            )}
           </div>
           <div className="flex-1 text-center sm:text-left">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900">
               {student.firstName} {student.lastName}
             </h1>
             <p className="text-gray-600 mt-1">
               {cls ? `Class ${cls.name}` : 'No class assigned'}
             </p>
-            <div className="mt-3 inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-sm font-medium">
-              <GraduationCap className="w-4 h-4" />
-              Student Profile
+            <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-3">
+              <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-sm font-medium">
+                <GraduationCap className="w-4 h-4" />
+                Student Profile
+              </div>
+              <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
+                <Hash className="w-4 h-4" />
+                Adm No: {student.admissionNumber || 'N/A'}
+              </div>
             </div>
           </div>
         </div>
@@ -102,64 +111,86 @@ export default function StudentProfile() {
         {/* Profile Details */}
         <div className="mt-8 bg-white rounded-2xl shadow-md border border-gray-100 p-8 hover:shadow-lg transition-all duration-300">
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <User className="w-5 h-5 text-indigo-600" /> Personal Information
+            <User className="w-5 h-5 text-indigo-600" /> Personal & Academic Information
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-            <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+            <div className="space-y-6">
               <div>
-                <div className="text-gray-500 mb-1 flex items-center gap-1">
-                  <Hash className="w-4 h-4 text-indigo-500" /> Roll Number
-                </div>
-                <div className="font-medium text-gray-900">
-                  {student.rollNumber || '—'}
+                <h3 className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Basic Info</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Full Name</span>
+                    <span className="font-medium text-gray-900">{student.firstName} {student.lastName}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Father's Name</span>
+                    <span className="font-medium text-gray-900">{student.fatherName || '—'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Date of Admission</span>
+                    <span className="font-medium text-gray-900">{student.admissionDate ? new Date(student.admissionDate).toLocaleDateString() : '—'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Aadhar Card</span>
+                    <span className="font-medium text-gray-900">{student.aadharCard || '—'}</span>
+                  </div>
                 </div>
               </div>
 
               <div>
-                <div className="text-gray-500 mb-1 flex items-center gap-1">
-                  <Mail className="w-4 h-4 text-indigo-500" /> Email
-                </div>
-                <div className="font-medium text-gray-900">
-                  {student.email || '—'}
+                <h3 className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Contact</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Email</span>
+                    <span className="font-medium text-gray-900">{student.email || '—'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Phone</span>
+                    <span className="font-medium text-gray-900">{student.phone || '—'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Address</span>
+                    <span className="font-medium text-gray-900 text-right max-w-[60%]">{student.address || '—'}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <div className="text-gray-500 mb-1 flex items-center gap-1">
-                  <GraduationCap className="w-4 h-4 text-indigo-500" /> Class
-                </div>
-                <div className="font-medium text-gray-900">
-                  {cls ? cls.name : '—'}
-                </div>
-              </div>
-
-              {(() => {
-                const teacherName = cls && cls.teacher
-                  ? [cls.teacher.firstName, cls.teacher.lastName].filter(Boolean).join(' ')
-                  : ''
-                if (!teacherName) return null
-                return (
-                  <div>
-                    <div className="text-gray-500 mb-1 flex items-center gap-1">
-                      <Users className="w-4 h-4 text-indigo-500" /> Class Teacher
-                    </div>
-                    <div className="font-medium text-gray-900">{teacherName}</div>
+                <h3 className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Academic Info</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Class</span>
+                    <span className="font-medium text-gray-900">{cls ? cls.name : '—'}</span>
                   </div>
-                )
-              })()}
-
-              <div>
-                <div className="text-gray-500 mb-1 flex items-center gap-1">
-                  <Users className="w-4 h-4 text-indigo-500" /> Students in Class
-                </div>
-                <div className="font-medium text-gray-900">
-                  {cls && cls.students ? cls.students.length : 0}
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Roll Number</span>
+                    <span className="font-medium text-gray-900">{student.rollNumber || '—'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Reference</span>
+                    <span className="font-medium text-gray-900">{student.reference || '—'}</span>
+                  </div>
                 </div>
               </div>
-              {/* transport moved to dedicated page */}
+
+              <div>
+                <h3 className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Class Details</h3>
+                <div className="space-y-3">
+                  {cls && cls.teacher && (
+                    <div className="flex justify-between border-b border-gray-50 pb-2">
+                      <span className="text-gray-500">Class Teacher</span>
+                      <span className="font-medium text-gray-900">{cls.teacher.firstName} {cls.teacher.lastName}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Classmates Count</span>
+                    <span className="font-medium text-gray-900">{cls && cls.students ? cls.students.length : 0}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

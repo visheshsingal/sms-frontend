@@ -5,45 +5,12 @@ import { CalendarDays, Upload, Loader2, Clock } from 'lucide-react'
 
 export default function TeacherTimetable() {
   const [timetables, setTimetables] = useState([])
-  const [form, setForm] = useState({ classId: '', content: '' })
+  const [form, setForm] = useState({ classId: '', content: '', date: '' })
   const [assignedClass, setAssignedClass] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [file, setFile] = useState(null)
 
-  const load = async () => {
-    setLoading(true)
-    try {
-      if (!form.classId) {
-        // nothing to load until we know the class id assigned
-        setTimetables([])
-        setLoading(false)
-        return
-      }
-      const res = await API.get('/teacher/timetable/' + form.classId)
-      setTimetables(res.data)
-    } catch (err) {
-      console.error(err)
-      toast.error('Failed to load timetables')
-    }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    const loadClass = async () => {
-      try {
-        const res = await API.get('/teacher/assigned-class')
-        setAssignedClass(res.data || null)
-        if (res.data && res.data._id)
-          setForm((f) => ({ ...f, classId: res.data._id }))
-      } catch (err) {
-        console.error(err)
-      }
-    }
-    loadClass()
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [form.classId])
+  // ... existing load/useEffect ...
 
   const submit = async (e) => {
     e.preventDefault()
@@ -52,8 +19,25 @@ export default function TeacherTimetable() {
         toast.error('Please select or enter a class')
         return
       }
-      await API.post('/teacher/timetable', form)
-      setForm({ ...form, content: '' })
+
+      let imageUrl = null
+      if (file) {
+        const formData = new FormData()
+        formData.append('image', file)
+        try {
+          const uploadRes = await API.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          imageUrl = uploadRes.data.url
+        } catch (uploadErr) {
+          toast.error('Image upload failed')
+          return
+        }
+      }
+
+      await API.post('/teacher/timetable', { ...form, imageUrl })
+      setForm({ ...form, content: '', date: '' })
+      setFile(null)
       load()
       toast.success('Timetable uploaded successfully')
     } catch (err) {
@@ -75,7 +59,7 @@ export default function TeacherTimetable() {
           </div>
           <p className="text-gray-600 text-sm">
             Upload and manage your class timetable easily. Provide either text
-            content or a timetable URL.
+            content or a timetable URL/Image.
           </p>
         </div>
 
@@ -98,25 +82,45 @@ export default function TeacherTimetable() {
               </span>
             </div>
 
-            <input
-              value={form.classId}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, classId: e.target.value }))
-              }
-              placeholder="Enter Class ID"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                value={form.classId}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, classId: e.target.value }))
+                }
+                placeholder="Enter Class ID"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+
+              <input
+                type="date"
+                value={form.date}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, date: e.target.value }))
+                }
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
 
             <textarea
               value={form.content}
               onChange={(e) =>
                 setForm((f) => ({ ...f, content: e.target.value }))
               }
-              placeholder="Enter timetable text or URL (e.g. Google Drive link)"
+              placeholder="Enter timetable text or URL (optional)"
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-              required
               rows={3}
             />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Attach Image (optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFile(e.target.files[0])}
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+            </div>
 
             <div className="flex justify-end">
               <button
@@ -159,20 +163,34 @@ export default function TeacherTimetable() {
                 >
                   <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                     <div className="flex-1">
-                      {t.content.startsWith('http') ? (
+                      <div className="text-sm font-semibold text-indigo-600 mb-1">
+                        {t.date ? new Date(t.date).toLocaleDateString() : 'No Date'}
+                      </div>
+
+                      {t.content && t.content.startsWith('http') ? (
                         <a
                           href={t.content}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-indigo-600 font-medium hover:underline"
+                          className="text-indigo-600 font-medium hover:underline block"
                         >
-                          Open Timetable
+                          Open Link
                         </a>
                       ) : (
-                        <div className="font-medium text-gray-900">
+                        t.content && <div className="font-medium text-gray-900 mb-2">
                           {t.content}
                         </div>
                       )}
+
+                      {t.imageUrl && (
+                        <div className="mt-2">
+                          <img src={t.imageUrl} alt="Timetable" className="max-w-xs rounded-lg shadow-sm mb-2" />
+                          <a href={t.imageUrl} download target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline">
+                            View Full Image / Download
+                          </a>
+                        </div>
+                      )}
+
                       {t.uploadedBy && (
                         <div className="text-sm text-gray-600 mt-1">
                           Uploaded by:{' '}
@@ -181,7 +199,7 @@ export default function TeacherTimetable() {
                       )}
                     </div>
                     <div className="text-xs text-gray-500 whitespace-nowrap">
-                      {new Date(t.createdAt).toLocaleString()}
+                      Uploaded: {new Date(t.createdAt).toLocaleString()}
                     </div>
                   </div>
                 </div>

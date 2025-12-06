@@ -5,6 +5,7 @@ import { Users, ClipboardList, Loader2 } from 'lucide-react'
 export default function TeacherClass() {
   const [cls, setCls] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -29,7 +30,7 @@ export default function TeacherClass() {
     )
   }
 
-  if (!cls) {
+  if (!cls || !cls._id) {
     return (
       <div className="text-center py-16 bg-white rounded-2xl shadow-md border border-gray-100">
         <div className="w-20 h-20 mx-auto bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-4">
@@ -39,6 +40,19 @@ export default function TeacherClass() {
       </div>
     )
   }
+
+  const filteredStudents = (cls.students || []).filter((s) => {
+    const search = query.toLowerCase().trim()
+    if (!search) return true
+
+    const name = `${s.firstName} ${s.lastName}`.toLowerCase()
+    const roll = (s.rollNumber || '').toLowerCase()
+    const email = (s.email || '').toLowerCase()
+    const adm = (s.admissionNumber || '').toLowerCase()
+    const father = (s.fatherName || '').toLowerCase()
+
+    return name.includes(search) || roll.includes(search) || email.includes(search) || adm.includes(search) || father.includes(search)
+  })
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -68,38 +82,65 @@ export default function TeacherClass() {
 
         {/* Student List */}
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <div>
               <h4 className="text-lg font-semibold text-gray-900">Students</h4>
+              <p className="text-sm text-gray-500 mt-1">
+                Showing {filteredStudents.length} of {cls.students?.length || 0} students
+              </p>
             </div>
-            <div className="text-sm text-gray-500 sm:ml-4 whitespace-nowrap">
-              Showing {cls.students?.length || 0} enrolled students
+            <div className="w-full sm:w-72">
+              <input
+                type="text"
+                placeholder="Search name, roll, admission no..."
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+              />
             </div>
           </div>
 
-          {cls.students && cls.students.length > 0 ? (
+          {filteredStudents.length > 0 ? (
             <>
               {/* Desktop / Tablet: table view */}
               <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-200">
                 <table className="min-w-full table-auto text-sm text-left text-gray-700">
                   <thead className="bg-indigo-600 text-white text-sm uppercase">
                     <tr>
+                      <th className="px-4 py-3">Profile</th>
                       <th className="px-4 py-3">Roll No</th>
+                      <th className="px-4 py-3">Adm No</th>
                       <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Father's Name</th>
                       <th className="px-4 py-3">Email</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white">
-                    {cls.students.map((s, i) => (
+                    {filteredStudents.map((s, i) => (
                       <tr
                         key={s._id || i}
                         className="hover:bg-indigo-50 transition-colors duration-150"
                       >
+                        <td className="px-4 py-3">
+                          <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 overflow-hidden flex items-center justify-center text-indigo-600 font-bold text-xs">
+                            {s.profileImage ? (
+                              <img src={s.profileImage} alt={s.firstName} className="w-full h-full object-cover" />
+                            ) : (
+                              (s.firstName?.[0] || '') + (s.lastName?.[0] || '')
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 py-3 text-gray-700 whitespace-nowrap sm:whitespace-normal break-words">
                           {s.rollNumber || '—'}
                         </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {s.admissionNumber || '—'}
+                        </td>
                         <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap sm:whitespace-normal break-words">
                           {s.firstName} {s.lastName}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {s.fatherName || '—'}
                         </td>
                         <td className="px-4 py-3 text-gray-600 whitespace-nowrap sm:whitespace-normal break-words">
                           {s.email || '—'}
@@ -112,13 +153,23 @@ export default function TeacherClass() {
 
               {/* Mobile: compact list view */}
               <div className="block sm:hidden space-y-3">
-                {cls.students.map((s, i) => (
-                  <div key={s._id || i} className="bg-white border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="font-medium text-gray-900">{s.firstName} {s.lastName}</div>
-                      <div className="text-sm text-gray-500">{s.rollNumber || '—'}</div>
+                {filteredStudents.map((s, i) => (
+                  <div key={s._id || i} className="bg-white border rounded-lg p-3 flex gap-3 items-start">
+                    <div className="w-12 h-12 rounded-full bg-indigo-50 border border-indigo-100 overflow-hidden flex-shrink-0 flex items-center justify-center text-indigo-600 font-bold">
+                      {s.profileImage ? (
+                        <img src={s.profileImage} alt={s.firstName} className="w-full h-full object-cover" />
+                      ) : (
+                        (s.firstName?.[0] || '') + (s.lastName?.[0] || '')
+                      )}
                     </div>
-                    <div className="text-xs text-gray-600 mt-1">{s.email || '—'}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-gray-900">{s.firstName} {s.lastName}</div>
+                        <div className="text-sm text-gray-500">Roll: {s.rollNumber || '—'}</div>
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">Adm: {s.admissionNumber || '-'} • Father: {s.fatherName || '-'}</div>
+                      <div className="text-xs text-gray-500 mt-1">{s.email || '—'}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -129,7 +180,7 @@ export default function TeacherClass() {
                 <Users className="w-10 h-10 text-indigo-500" />
               </div>
               <p className="text-gray-600 text-sm">
-                No students found in this class.
+                No students found matching "{query}"
               </p>
             </div>
           )}

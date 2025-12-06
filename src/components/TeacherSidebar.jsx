@@ -12,6 +12,7 @@ import {
   Bell,
   QrCode,
   X,
+  Megaphone
 } from 'lucide-react'
 
 export default function TeacherSidebar({ className = '', onClose }) {
@@ -41,8 +42,9 @@ export default function TeacherSidebar({ className = '', onClose }) {
     { to: '/teacher/timetable', label: 'Timetable', icon: Calendar },
     { to: '/teacher/progress', label: 'Student Progress', icon: BarChart3 },
     { to: '/teacher/leaves', label: 'Leaves', icon: FileText },
-  { to: '/teacher/notices', label: 'Notices', icon: Bell },
-  { to: '/teacher/qr-scanner', label: 'QR Scanner', icon: QrCode },
+    { to: '/teacher/notices/school', label: 'School Notices', icon: Bell },
+    { to: '/teacher/notices/my', label: 'My Announcements', icon: Megaphone },
+    { to: '/teacher/qr-scanner', label: 'QR Scanner', icon: QrCode },
   ]
 
   return (
@@ -81,10 +83,9 @@ export default function TeacherSidebar({ className = '', onClose }) {
               key={i.to}
               to={i.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
+                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
                 }`
               }
             >

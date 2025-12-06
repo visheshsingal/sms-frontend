@@ -2,33 +2,33 @@ import React, { useEffect, useState } from 'react'
 import API from '../utils/api'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 
-export default function LiveTrackingAdmin(){
+export default function LiveTrackingAdmin() {
   const [buses, setBuses] = useState([])
   const [selected, setSelected] = useState(null)
   const [live, setLive] = useState(null)
 
-  useEffect(()=>{ const load = async ()=>{ try{ const r = await API.get('/admin/buses'); setBuses(r.data || []) }catch(e){ setBuses([]) } }; load() }, [])
+  useEffect(() => { const load = async () => { try { const r = await API.get('/admin/buses'); setBuses(r.data || []) } catch (e) { setBuses([]) } }; load() }, [])
 
-  useEffect(()=>{
+  useEffect(() => {
     let poll = null
-    const start = async (busId)=>{
-      try{ const r = await API.get(`/admin/buses/${busId}/live`); setLive(r.data?.live || null) }catch(e){}
-      poll = setInterval(async ()=>{ try{ const r = await API.get(`/admin/buses/${busId}/live`); setLive(r.data?.live || null) }catch(e){} }, 5000)
+    const start = async (busId) => {
+      try { const r = await API.get(`/admin/buses/${busId}/live`); setLive(r.data?.live || null) } catch (e) { }
+      poll = setInterval(async () => { try { const r = await API.get(`/admin/buses/${busId}/live`); setLive(r.data?.live || null) } catch (e) { } }, 5000)
     }
     if (selected) start(selected)
-    return ()=>{ if (poll) clearInterval(poll) }
+    return () => { if (poll) clearInterval(poll) }
   }, [selected])
 
   const validLocation = live && live.lastLocation && isFinite(Number(live.lastLocation.lat)) && isFinite(Number(live.lastLocation.lng))
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-semibold mb-4">Live Tracking (Admin)</h2>
+      <h2 className="text-2xl font-semibold mb-4">Live Tracking</h2>
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Select Bus</label>
-        <select value={selected||''} onChange={e=>setSelected(e.target.value)} className="px-3 py-2 border rounded">
+        <select value={selected || ''} onChange={e => setSelected(e.target.value)} className="px-3 py-2 border rounded">
           <option value="">-- choose bus --</option>
-          {buses.map(b=> <option key={b._id} value={b._id}>{b.number} {b.route && b.route.name ? `— ${b.route.name}` : ''}</option>)}
+          {buses.map(b => <option key={b._id} value={b._id}>{b.number} {b.route && b.route.name ? `— ${b.route.name}` : ''}</option>)}
         </select>
       </div>
       {validLocation ? (

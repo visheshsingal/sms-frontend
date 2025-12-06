@@ -76,33 +76,61 @@ export default function StudentDashboard() {
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Profile */}
-          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-            <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-3">
-              <User className="w-5 h-5 text-indigo-600" /> Profile
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 md:col-span-1">
+            <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-4">
+              <User className="w-5 h-5 text-indigo-600" /> My Profile
             </h4>
             {data.student ? (
-              <div className="space-y-2 text-sm">
-                <div className="font-medium text-gray-900">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-24 h-24 rounded-full bg-indigo-50 border-2 border-indigo-100 overflow-hidden mb-4 flex items-center justify-center text-indigo-600 font-bold text-2xl">
+                  {data.student.profileImage ? (
+                    <img src={data.student.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    (data.student.firstName?.[0] || '') + (data.student.lastName?.[0] || '')
+                  )}
+                </div>
+                <div className="font-bold text-xl text-gray-900 mb-1">
                   {data.student.firstName} {data.student.lastName}
                 </div>
-                <div className="text-gray-600">
-                  Roll No: {data.student.rollNumber || '—'}
+                <div className="text-sm text-indigo-600 font-medium bg-indigo-50 px-3 py-1 rounded-full mb-4">
+                  Class {data.class ? data.class.name : '—'}
                 </div>
-                <div className="text-gray-600">
-                  Email: {data.student.email || '—'}
-                </div>
-                <div className="mt-2 text-gray-700">
-                  Class: {data.class ? data.class.name : '—'}
-                </div>
-                <div className="text-gray-700">
-                  Teacher:{' '}
-                  {data.class?.teacher
-                    ? `${data.class.teacher.firstName} ${data.class.teacher.lastName}`
-                    : '—'}
+
+                <div className="w-full space-y-3 text-left bg-gray-50 rounded-xl p-4 text-sm border border-gray-100">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Roll No:</span>
+                    <span className="font-semibold text-gray-800">{data.student.rollNumber || '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Adm No:</span>
+                    <span className="font-semibold text-gray-800">{data.student.admissionNumber || '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Adm Date:</span>
+                    <span className="font-semibold text-gray-800">{data.student.admissionDate ? new Date(data.student.admissionDate).toLocaleDateString() : '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Father:</span>
+                    <span className="font-semibold text-gray-800">{data.student.fatherName || '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Aadhar:</span>
+                    <span className="font-semibold text-gray-800 break-all ml-2 text-right">{data.student.aadharCard || '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Email:</span>
+                    <span className="font-semibold text-gray-800 break-all ml-2 text-right">{data.student.email || '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Teacher:</span>
+                    <span className="font-semibold text-gray-800"> {data.class?.teacher
+                      ? `${data.class.teacher.firstName} ${data.class.teacher.lastName}`
+                      : '—'}</span>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-gray-500">Loading profile...</div>
+              <div className="text-sm text-gray-500 text-center py-10">Loading profile...</div>
             )}
           </div>
 
@@ -263,13 +291,12 @@ export default function StudentDashboard() {
                       {new Date(l.to).toLocaleDateString()}
                     </div>
                     <div
-                      className={`text-sm font-medium mt-1 ${
-                        l.status === 'approved'
+                      className={`text-sm font-medium mt-1 ${l.status === 'approved'
                           ? 'text-green-600'
                           : l.status === 'rejected'
-                          ? 'text-red-600'
-                          : 'text-yellow-600'
-                      }`}
+                            ? 'text-red-600'
+                            : 'text-yellow-600'
+                        }`}
                     >
                       Status: {l.status}
                     </div>

@@ -105,11 +105,15 @@ export default function StudentProgressReport() {
                       <td className="px-4 py-3">{r.examName || '-'}</td>
                       <td className="px-4 py-3">{r.subject || '-'}</td>
                       <td className="px-4 py-3 font-semibold text-indigo-700">
-                        {r.marks != null
-                          ? `${r.marks}/${r.outOf || ''}`
-                          : r.metrics
-                          ? JSON.stringify(r.metrics)
-                          : '-'}
+                        {r.absent ? (
+                          <span className="text-red-500">Absent</span>
+                        ) : r.marks != null ? (
+                          `${r.marks}/${r.outOf || ''}`
+                        ) : r.metrics ? (
+                          JSON.stringify(r.metrics)
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-700">{r.remarks || '-'}</td>
                     </tr>

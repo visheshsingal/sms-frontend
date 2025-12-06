@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import StudentSidebar from '../components/StudentSidebar'
+import NotificationBell from '../components/NotificationBell'
 import API from '../utils/api'
 import { Menu } from 'lucide-react'
 
-export default function StudentLayout(){
+export default function StudentLayout() {
   const [cls, setCls] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
-  useEffect(()=>{
-    const load = async ()=>{
-      try{
+  useEffect(() => {
+    const load = async () => {
+      try {
         const res = await API.get('/student/me')
         setCls(res.data.class)
-      }catch(err){
+      } catch (err) {
         console.error(err)
         if (err?.response?.status === 401) navigate('/student')
       }
@@ -53,7 +54,7 @@ export default function StudentLayout(){
         <div className="flex min-h-screen flex-1 flex-col">
 
           {/* 🔥 MOBILE HEADER — Hamburger + Text LEFT */}
-          <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm lg:hidden">
+          <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm lg:hidden">
 
             <div className="flex items-center gap-3">
               {/* Hamburger */}
@@ -71,9 +72,19 @@ export default function StudentLayout(){
                 <h1 className="text-lg font-semibold text-gray-900">Student Portal</h1>
                 <p className="text-sm text-gray-500">Access your dashboard</p>
               </div>
-            </div>
+              </div>
 
+            <NotificationBell />
           </div>
+
+          {/* 🔥 DESKTOP HEADER */}
+          <header className="hidden lg:flex items-center justify-end px-8 py-4 bg-white border-b border-gray-200 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600 font-medium">Welcome, Student</span>
+              <div className="h-6 w-px bg-gray-200"></div>
+              <NotificationBell />
+            </div>
+          </header>
 
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
             <Outlet />

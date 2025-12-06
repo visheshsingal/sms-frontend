@@ -58,8 +58,8 @@ export default function StudentProgress() {
                         {r.examName ||
                           (r.subject
                             ? `${r.subject} - ${new Date(
-                                r.date
-                              ).toLocaleDateString()}`
+                              r.date
+                            ).toLocaleDateString()}`
                             : 'Progress Record')}
                       </h4>
                       {r.subject && (
@@ -70,7 +70,11 @@ export default function StudentProgress() {
                     </div>
 
                     <div className="text-right">
-                      {r.marks !== undefined && r.outOf !== undefined ? (
+                      {r.absent ? (
+                        <div className="text-lg font-semibold text-red-500">
+                          Absent
+                        </div>
+                      ) : r.marks !== undefined && r.outOf !== undefined ? (
                         <div className="text-lg font-semibold text-indigo-600">
                           {r.marks}/{r.outOf}
                         </div>

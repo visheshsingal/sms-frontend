@@ -66,14 +66,40 @@ function TeacherMultiSelect({ teachers = [], value = [], onChange }) {
   )
 }
 
+// Helper for single teacher select
+function TeacherSelect({ teachers = [], value, onChange }) {
+  return (
+    <select
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value || null)}
+      className="px-3 py-2 border border-gray-300 rounded bg-white w-full"
+    >
+      <option value="">-- Select Class Teacher --</option>
+      {teachers.map((t) => (
+        <option key={t._id} value={t._id}>
+          {t.firstName} {t.lastName}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+const GRADES = ['Nursery', 'LKG', 'UKG', ...Array.from({ length: 12 }, (_, i) => String(i + 1))];
+
 export default function Classes() {
   const [classes, setClasses] = useState([])
-  const [name, setName] = useState('')
+  // const [name, setName] = useState('') // Removed manual name input
+  const [grade, setGrade] = useState('Nursery')
+  const [section, setSection] = useState('A')
+
   const [newSubjects, setNewSubjects] = useState([])
+  const [newClassTeacher, setNewClassTeacher] = useState(null)
   const [teachers, setTeachers] = useState([])
   const [students, setStudents] = useState([])
   const [editing, setEditing] = useState(null)
   const [selectedStudents, setSelectedStudents] = useState([])
+  const [editingClassTeacher, setEditingClassTeacher] = useState(null)
+  const [editingSubjects, setEditingSubjects] = useState([])
 
   const load = async () => {
     const [cRes, tRes, sRes] = await Promise.all([
@@ -93,18 +119,47 @@ export default function Classes() {
   const createClass = async (e) => {
     e.preventDefault()
     try {
-      await API.post('/admin/classes', { name, subjects: newSubjects })
-      setName('')
+      await API.post('/admin/classes', {
+        grade,
+        section,
+        subjects: newSubjects,
+        classTeacher: newClassTeacher
+      })
+      // Reset form
+      setGrade('Nursery')
+      setSection('A')
       setNewSubjects([])
+      setNewClassTeacher(null)
       load()
     } catch (err) {
       alert(err?.response?.data?.message || err.message)
     }
   }
 
+  const promoteStudents = async () => {
+    if (!confirm("Are you sure you want to promote eligible students to the next class? Check the backend logs for details.")) return;
+    try {
+      const res = await API.post('/admin/classes/promote');
+      let msg = res.data.message;
+      if (res.data.logs && res.data.logs.length) {
+        msg += '\n\nLogs:\n' + res.data.logs.join('\n');
+      } else {
+        msg += '\n\nNo students were moved (check if next classes exist).';
+      }
+      alert(msg);
+      load();
+    } catch (err) {
+      console.error(err);
+      alert("Promotion failed: " + (err.response?.data?.message || err.message));
+    }
+  }
+
+  // ... rest of editing functions ...
+
   const edit = (c) => {
     setEditing(c)
     setSelectedStudents(c.students ? c.students.map((s) => s._id) : [])
+    setEditingClassTeacher(c.classTeacher ? c.classTeacher._id : null)
     // load subjects into editable form
     setEditingSubjects(
       c.subjects && c.subjects.length
@@ -113,13 +168,12 @@ export default function Classes() {
     )
   }
 
-  const [editingSubjects, setEditingSubjects] = useState([])
-
   const saveAssignments = async () => {
     try {
       await API.put(`/admin/classes/${editing._id}`, {
         studentIds: selectedStudents,
         subjects: editingSubjects,
+        classTeacher: editingClassTeacher
       })
       setEditing(null)
       load()
@@ -148,6 +202,15 @@ export default function Classes() {
               Create, edit, and manage all classes, teachers, and student assignments.
             </p>
           </div>
+          <div>
+            <button
+              onClick={promoteStudents}
+              className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 shadow flex items-center gap-2"
+              title="Automatically promote students to next grade"
+            >
+              <GraduationCap className="w-5 h-5" /> Promote Students
+            </button>
+          </div>
         </div>
 
         {/* Create Class Form */}
@@ -155,17 +218,35 @@ export default function Classes() {
           <h4 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <PlusCircle className="w-5 h-5 text-indigo-600" /> Create New Class
           </h4>
-          <form onSubmit={createClass} className="flex flex-col sm:flex-row gap-3">
-            <input
-              className="px-4 py-3 border border-gray-300 rounded-lg flex-1 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-gray-900 placeholder-gray-400"
-              placeholder="Enter class name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <div className="flex items-center gap-3">
-              <button className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-200 shadow-sm hover:shadow">
-                Create Class
+          <form onSubmit={createClass} className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3 items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                <select
+                  value={grade}
+                  onChange={e => setGrade(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-gray-900"
+                >
+                  {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                <input
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-gray-900 placeholder-gray-400"
+                  placeholder="Section (e.g. A, B)"
+                  value={section}
+                  onChange={(e) => setSection(e.target.value.toUpperCase())}
+                  required
+                />
+              </div>
+
+              <div className="w-full sm:w-1/3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Class Teacher</label>
+                <TeacherSelect teachers={teachers} value={newClassTeacher} onChange={setNewClassTeacher} />
+              </div>
+              <button className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-200 shadow-sm hover:shadow h-[50px]">
+                Create
               </button>
             </div>
           </form>
@@ -229,9 +310,15 @@ export default function Classes() {
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div className="flex-1">
-                        <div className="font-semibold text-lg text-gray-900 mb-2">{c.name}</div>
+                        <div className="font-semibold text-lg text-gray-900 mb-2 flex items-center gap-3">
+                          {c.name}
+                          {c.classTeacher && (
+                            <span className="text-xs font-normal bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-100">
+                              CT: {c.classTeacher.firstName} {c.classTeacher.lastName}
+                            </span>
+                          )}
+                        </div>
                         <div className="space-y-1">
-                            {/* class-level homeroom teacher removed; subjects contain teacher assignments now */}
                           <div className="flex items-start gap-2 text-sm text-gray-600 mt-2">
                             <span className="font-medium whitespace-nowrap">Subjects:</span>
                             <span className="text-gray-800">
@@ -293,7 +380,12 @@ export default function Classes() {
 
               {/* Modal Body */}
               <div className="p-6 space-y-6">
-                {/* class-level homeroom teacher UI removed; use per-subject teacher assignments */}
+
+                {/* Class Teacher Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Class Teacher</label>
+                  <TeacherSelect teachers={teachers} value={editingClassTeacher} onChange={setEditingClassTeacher} />
+                </div>
 
                 {/* Students Selection */}
                 <div>
@@ -304,29 +396,43 @@ export default function Classes() {
                     <p className="text-sm text-gray-500 italic">No students available</p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-1">
-                      {students.map((s) => (
-                        <label
-                          key={s._id}
-                          className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer transition-all duration-150"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedStudents.includes(s._id)}
-                            onChange={(e) => {
-                              if (e.target.checked)
-                                setSelectedStudents((prev) => [...prev, s._id])
-                              else
-                                setSelectedStudents((prev) =>
-                                  prev.filter((id) => id !== s._id)
-                                )
-                            }}
-                            className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
-                          />
-                          <span className="text-sm font-medium text-gray-800">
-                            {s.firstName} {s.lastName}
-                          </span>
-                        </label>
-                      ))}
+                      {students.map((s) => {
+                        const isAssignedElsewhere = s.class && s.class._id && s.class._id !== editing._id;
+                        return (
+                          <label
+                            key={s._id}
+                            className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-150 ${isAssignedElsewhere
+                              ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-60'
+                              : 'border-gray-200 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer'
+                              }`}
+                          >
+                            <input
+                              type="checkbox"
+                              disabled={isAssignedElsewhere}
+                              checked={selectedStudents.includes(s._id)}
+                              onChange={(e) => {
+                                if (e.target.checked)
+                                  setSelectedStudents((prev) => [...prev, s._id])
+                                else
+                                  setSelectedStudents((prev) =>
+                                    prev.filter((id) => id !== s._id)
+                                  )
+                              }}
+                              className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:text-gray-400"
+                            />
+                            <div className="text-sm">
+                              <div className="font-medium text-gray-800">
+                                {s.firstName} {s.lastName}
+                              </div>
+                              {isAssignedElsewhere && (
+                                <div className="text-xs text-red-500">
+                                  in {s.class.name}
+                                </div>
+                              )}
+                            </div>
+                          </label>
+                        )
+                      })}
                     </div>
                   )}
                 </div>

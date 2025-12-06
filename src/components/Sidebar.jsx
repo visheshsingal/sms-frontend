@@ -19,6 +19,7 @@ const items = [
   { to: '/admin/students', label: 'Students', icon: Users },
   { to: '/admin/teachers', label: 'Teachers', icon: UserCheck },
   { to: '/admin/drivers', label: 'Drivers', icon: UserCheck },
+  { to: '/admin/bus-incharges', label: 'Bus Incharges', icon: UserCheck },
   { to: '/admin/classes', label: 'Classes', icon: GraduationCap },
   { to: '/admin/buses', label: 'Buses', icon: Bus },
   { to: '/admin/live', label: 'Live Tracking', icon: MapPin },
@@ -66,10 +67,9 @@ export default function Sidebar({ className = '', onClose }) {
               key={i.to}
               to={i.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-indigo-500 text-white shadow-md'
-                    : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
+                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
+                  ? 'bg-indigo-500 text-white shadow-md'
+                  : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
                 }`
               }
             >

@@ -33,6 +33,21 @@ export default function StudentLeaves() {
     }
   }
 
+  const reapply = async (id) => {
+    const message = prompt('Enter message to re-apply:')
+    if (!message) return
+
+    try {
+      await API.put(`/leaves/${id}`, { status: 'pending', message })
+      alert('Re-applied successfully')
+      // Refresh leaves
+      const res = await API.get('/leaves/me')
+      setLeaves(res.data)
+    } catch (err) {
+      alert('Failed to re-apply')
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -118,19 +133,18 @@ export default function StudentLeaves() {
                 key={l._id}
                 className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-all duration-200"
               >
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-3">
                   <div className="text-sm text-gray-800 font-medium">
                     {new Date(l.from).toLocaleDateString()} →{' '}
                     {new Date(l.to).toLocaleDateString()}
                   </div>
                   <div
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      l.status === 'approved'
-                        ? 'bg-green-100 text-green-700'
-                        : l.status === 'rejected'
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium ${l.status === 'approved'
+                      ? 'bg-green-100 text-green-700'
+                      : l.status === 'rejected'
                         ? 'bg-red-100 text-red-700'
                         : 'bg-yellow-100 text-yellow-700'
-                    }`}
+                      }`}
                   >
                     {l.status === 'approved' ? (
                       <CheckCircle className="w-3 h-3" />
@@ -142,10 +156,38 @@ export default function StudentLeaves() {
                     {l.status}
                   </div>
                 </div>
-                <p className="text-sm text-gray-700 mt-2 leading-snug">{l.reason}</p>
-                {l.reviewedBy && (
-                  <div className="text-xs text-gray-500 mt-2">
-                    Reviewed by: {l.reviewedBy}
+
+                {/* History / Chat View */}
+                <div className="space-y-3 bg-gray-50 rounded-lg p-3 border border-gray-100 max-h-60 overflow-y-auto mb-3">
+                  {l.history && l.history.length > 0 ? (
+                    l.history.map((h, i) => (
+                      <div key={i} className={`flex flex-col ${h.role !== 'student' ? 'items-start' : 'items-end'}`}>
+                        <div className={`max-w-[85%] rounded-lg p-2.5 text-sm ${h.role !== 'student'
+                          ? 'bg-white border border-gray-200 text-gray-800'
+                          : 'bg-indigo-600 text-white'
+                          }`}>
+                          <p>{h.message}</p>
+                          <div className={`mt-1 text-[10px] flex items-center gap-1 ${h.role !== 'student' ? 'text-gray-400' : 'text-indigo-200'}`}>
+                            <span className="capitalize font-semibold">{h.role}</span> • {new Date(h.date).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-700 leading-snug">
+                      {l.reason}
+                    </div>
+                  )}
+                </div>
+
+                {l.status === 'rejected' && (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => reapply(l._id)}
+                      className="text-sm text-indigo-600 font-medium hover:text-indigo-800 underline"
+                    >
+                      Re-apply / Reply
+                    </button>
                   </div>
                 )}
               </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FileText, Clock, Paperclip, AlertTriangle } from 'lucide-react'
+import { FileText, Clock, Paperclip, AlertTriangle, Download } from 'lucide-react'
 import API from '../../utils/api'
 
 export default function StudentAssignments() {
@@ -31,8 +31,8 @@ export default function StudentAssignments() {
           {/* Month filter */}
           <div className="mb-4 flex items-center gap-3">
             <label className="text-sm text-gray-700">Filter by month:</label>
-            <input type="month" value={month} onChange={(e)=> setMonth(e.target.value)} className="px-3 py-2 border rounded-md" />
-            {month && <button onClick={()=> setMonth('')} className="text-sm text-indigo-600 hover:underline">Clear</button>}
+            <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="px-3 py-2 border rounded-md" />
+            {month && <button onClick={() => setMonth('')} className="text-sm text-indigo-600 hover:underline">Clear</button>}
           </div>
 
           {assignments.length === 0 ? (
@@ -65,11 +65,10 @@ export default function StudentAssignments() {
                         </p>
                       </div>
                       <div
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          isOverdue
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-green-100 text-green-700'
-                        }`}
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${isOverdue
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-green-100 text-green-700'
+                          }`}
                       >
                         <Clock className="inline w-4 h-4 mr-1" />
                         {due ? due.toLocaleDateString() : 'No due date'}
@@ -83,16 +82,33 @@ export default function StudentAssignments() {
                     {a.attachments?.length > 0 && (
                       <div className="mt-4 flex flex-wrap gap-2">
                         {a.attachments.map((at, i) => (
-                          <a
+                          <button
                             key={i}
-                            href={at}
-                            target="_blank"
-                            rel="noreferrer"
+                            onClick={async () => {
+                              try {
+                                const response = await fetch(at);
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                // Extract filename from URL or default
+                                const filename = at.split('/').pop() || `attachment_${i + 1}`;
+                                link.setAttribute('download', filename);
+                                document.body.appendChild(link);
+                                link.click();
+                                link.parentNode.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                              } catch (error) {
+                                console.error('Download failed', error);
+                                // Fallback to opening in new tab
+                                window.open(at, '_blank');
+                              }
+                            }}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg shadow-sm transition-all"
                           >
-                            <Paperclip className="w-4 h-4" />
-                            Attachment {i + 1}
-                          </a>
+                            <Download className="w-4 h-4" />
+                            Download Attachment {i + 1}
+                          </button>
                         ))}
                       </div>
                     )}

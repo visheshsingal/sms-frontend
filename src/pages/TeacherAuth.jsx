@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import API from '../utils/api'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, LogIn } from 'lucide-react'
+import { BookOpen, LogIn, Eye, EyeOff } from 'lucide-react'
 
 export default function TeacherAuth() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -19,12 +20,12 @@ export default function TeacherAuth() {
   const submit = async e => {
     e.preventDefault()
     try {
-  const res = await API.post('/auth/login', { email, password })
+      const res = await API.post('/auth/login', { email, password })
       if (res.data.role !== 'teacher') return alert('Not a teacher account')
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('role', res.data.role)
-  localStorage.setItem('username', res.data.username)
-  localStorage.setItem('email', res.data.email || res.data.username)
+      localStorage.setItem('username', res.data.username)
+      localStorage.setItem('email', res.data.email || res.data.username)
       navigate('/teacher/dashboard')
     } catch (err) {
       alert(err?.response?.data?.message || err.message)
@@ -34,7 +35,7 @@ export default function TeacherAuth() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white px-4">
       <div className="relative w-full max-w-md p-8 rounded-2xl shadow-2xl border border-slate-700 bg-slate-900/60 backdrop-blur-xl">
-        
+
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
@@ -60,13 +61,22 @@ export default function TeacherAuth() {
 
           <div>
             <label className="text-sm text-slate-300 block mb-1">Password</label>
-            <input
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              type="password"
-              placeholder="Enter your password"
-              className="w-full px-4 py-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 outline-none transition-all duration-300"
-            />
+            <div className="relative">
+              <input
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                className="w-full px-4 py-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 outline-none transition-all duration-300 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-white"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           <div className="mt-6">

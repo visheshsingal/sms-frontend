@@ -3,14 +3,16 @@ import API from '../utils/api';
 import { toast } from 'react-toastify';
 import { Megaphone, Trash2, PlusCircle } from 'lucide-react';
 
-export default function Notices() {
+export default function Notices({ source = null }) {
   const [notices, setNotices] = useState([]);
   const [form, setForm] = useState({ title: '', body: '', audience: 'all' });
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
     try {
-      const res = await API.get('/admin/notices');
+      const params = {};
+      if (source) params.source = source;
+      const res = await API.get('/admin/notices', { params });
       setNotices(res.data);
     } catch (err) {
       toast.error('Error loading notices');
@@ -19,7 +21,7 @@ export default function Notices() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [source]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -58,7 +60,7 @@ export default function Notices() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
               <Megaphone className="w-8 h-8 text-indigo-600" />
-              Notices
+              {source === 'admin' ? 'School Notices' : source === 'teacher' ? 'Class Notices' : 'Notices'}
             </h1>
             <p className="text-gray-600 mt-1">
               Create, manage, and view notices for your school community.
@@ -66,8 +68,8 @@ export default function Notices() {
           </div>
         </div>
 
-        {/* Admin Create Notice Form */}
-        {isAdmin && (
+        {/* Admin Create Notice Form - only show if no specific source filter (e.g. general notices page or admin dash) */}
+        {isAdmin && !source && (
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8 mb-10 hover:shadow-lg transition-all duration-300">
             <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <PlusCircle className="w-5 h-5 text-indigo-600" />
@@ -104,6 +106,7 @@ export default function Notices() {
                   <option value="all">All</option>
                   <option value="students">Students</option>
                   <option value="teachers">Teachers</option>
+                  <option value="bus-incharges">Bus Incharges</option>
                   <option value="drivers">Drivers</option>
                   <option value="admins">Admins</option>
                 </select>
@@ -169,11 +172,21 @@ export default function Notices() {
                     {n.body}
                   </div>
 
-                  {n.audience && (
-                    <div className="mt-2 text-xs font-medium text-indigo-600 bg-indigo-50 inline-block px-3 py-1 rounded-full">
-                      Audience: {n.audience.charAt(0).toUpperCase() + n.audience.slice(1)}
-                    </div>
-                  )}
+                  <div className="mt-2 flex gap-2">
+                    {n.targetStudent ? (
+                      <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                        To: {n.targetStudent.firstName} {n.targetStudent.lastName}
+                      </span>
+                    ) : n.targetClass ? (
+                      <span className="text-xs font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
+                        To: Class {n.targetClass.name}
+                      </span>
+                    ) : n.audience && (
+                      <span className="text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                        To: {n.audience.charAt(0).toUpperCase() + n.audience.slice(1)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

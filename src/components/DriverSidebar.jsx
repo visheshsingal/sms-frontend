@@ -1,14 +1,16 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { Bus, User, MapPin, ClipboardList, X } from 'lucide-react'
+import { Bus, User, MapPin, ClipboardList, X, QrCode } from 'lucide-react'
 
-export default function DriverSidebar({ driver, bus, className = '', onClose }){
+export default function DriverSidebar({ driver, bus, className = '', onClose }) {
   const items = [
     { to: '/driver/profile', label: 'Profile', icon: User },
     { to: '/driver/dashboard', label: 'Assigned Bus', icon: Bus },
     { to: '/driver/route', label: 'Route', icon: MapPin },
-    { to: '/driver/qr-scanner', label: 'Scanner', icon: ClipboardList },
-    { to: '/driver/attendance', label: 'Manual Attendance', icon: ClipboardList },
+    { to: '/driver/attendance/morning', label: 'Morning Attendance', icon: ClipboardList },
+    { to: '/driver/attendance/evening', label: 'Evening Attendance', icon: ClipboardList },
+    { to: '/driver/qr-scanner/morning', label: 'Morning Scan', icon: QrCode },
+    { to: '/driver/qr-scanner/evening', label: 'Evening Scan', icon: QrCode },
     { to: '/driver/notices', label: 'Notices', icon: ClipboardList }
   ]
 
@@ -44,8 +46,7 @@ export default function DriverSidebar({ driver, bus, className = '', onClose }){
           const Icon = i.icon
           return (
             <NavLink key={i.to} to={i.to} className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
+              `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
               }`
             }>
               <Icon className="w-4 h-4" />

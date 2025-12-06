@@ -40,6 +40,10 @@ export default function TeacherAssignments() {
     load()
   }, [])
 
+  const [file, setFile] = useState(null)
+
+  // ... existing code ...
+
   const submit = async (e) => {
     e.preventDefault()
     try {
@@ -47,38 +51,40 @@ export default function TeacherAssignments() {
         toast.error('Class ID required')
         return
       }
+
+      let attachments = editing ? assignments.find(a => a._id === editing).attachments || [] : []
+
+      if (file) {
+        const formData = new FormData()
+        formData.append('image', file)
+        try {
+          const uploadRes = await API.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          attachments.push(uploadRes.data.url)
+        } catch (uploadErr) {
+          toast.error('Image upload failed')
+          return
+        }
+      }
+
       if (editing) {
-        await API.put(`/teacher/assignments/${editing}`, form)
+        await API.put(`/teacher/assignments/${editing}`, { ...form, attachments })
         setEditing(null)
       } else {
-        await API.post('/teacher/assignments', form)
+        await API.post('/teacher/assignments', { ...form, attachments })
       }
-      setForm({ title: '', description: '', dueDate: '' })
+      setForm({ title: '', description: '', dueDate: '', classId: form.classId })
+      setFile(null)
       load()
-      toast.success('Assignment created successfully')
+      toast.success('Assignment saved successfully')
     } catch (err) {
-      toast.error('Failed to create assignment')
+      toast.error('Failed to save assignment')
       console.error(err)
     }
   }
 
-  const onEdit = (a) => {
-    setEditing(a._id)
-    setForm({ title: a.title || '', description: a.description || '', dueDate: a.dueDate ? new Date(a.dueDate).toISOString().slice(0,10) : '', classId: a.classId })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const onDelete = async (id) => {
-    if (!confirm('Delete this assignment?')) return
-    try {
-      await API.delete(`/teacher/assignments/${id}`)
-      toast.success('Assignment deleted')
-      load()
-    } catch (err) {
-      toast.error('Failed to delete assignment')
-      console.error(err)
-    }
-  }
+  // ... existing code ...
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -136,12 +142,22 @@ export default function TeacherAssignments() {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all mb-3"
             />
 
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Attach Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFile(e.target.files[0])}
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+            </div>
+
             <div className="flex justify-end">
               <button
                 type="submit"
                 className="px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm hover:bg-indigo-700 transition-colors duration-200"
               >
-                Create Assignment
+                {editing ? 'Update Assignment' : 'Create Assignment'}
               </button>
             </div>
           </form>
@@ -166,7 +182,6 @@ export default function TeacherAssignments() {
               <div className="space-y-4">
                 {assignments.map((a) => {
                   const dueDate = a.dueDate ? new Date(a.dueDate) : null
-                  const overdue = dueDate && dueDate < new Date()
 
                   return (
                     <div
@@ -188,20 +203,23 @@ export default function TeacherAssignments() {
                               ? dueDate.toLocaleDateString()
                               : '—'}
                           </div>
+                          {a.attachments && a.attachments.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-xs font-medium text-gray-700 mb-1">Attachments:</p>
+                              <div className="flex gap-2">
+                                {a.attachments.map((url, idx) => (
+                                  <a key={idx} href={url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline">
+                                    View Image {idx + 1}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                           <button onClick={() => onEdit(a)} className="w-full sm:w-auto text-sm text-indigo-600 hover:underline text-left sm:text-left">Edit</button>
                           <button onClick={() => onDelete(a._id)} className="w-full sm:w-auto text-sm text-red-600 hover:underline text-left">Delete</button>
-                          <div
-                            className={`text-xs font-medium px-3 py-1 rounded-lg ${
-                              overdue
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-green-100 text-green-700'
-                            }`}
-                          >
-                            {overdue ? 'Overdue' : 'Active'}
-                          </div>
                         </div>
                       </div>
                     </div>

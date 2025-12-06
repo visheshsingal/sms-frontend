@@ -12,6 +12,7 @@ import {
   MapPin,
   QrCode,
   X,
+  Megaphone
 } from 'lucide-react'
 
 export default function StudentSidebar({ studentClass = null, className = '', onClose }) {
@@ -40,14 +41,15 @@ export default function StudentSidebar({ studentClass = null, className = '', on
       label: `Attendance${assignedClass?.name ? ` (${assignedClass.name})` : ''}`,
       icon: FileText,
     },
-      { to: '/student/qr', label: 'My QR', icon: QrCode },
+    { to: '/student/qr', label: 'My QR', icon: QrCode },
     { to: '/student/progress', label: 'Marks & Progress', icon: BarChart3 },
     { to: '/student/assignments', label: 'Assignments', icon: NotebookPen },
     { to: '/student/timetable', label: 'Timetable', icon: Calendar },
     { to: '/student/leaves', label: 'Leaves', icon: ClipboardList },
     { to: '/student/transport', label: 'Transport', icon: MapPin },
-  { to: '/student/live', label: 'Live Tracking', icon: MapPin },
-    { to: '/student/notices', label: 'Notices', icon: Bell },
+    { to: '/student/live', label: 'Live Tracking', icon: MapPin },
+    { to: '/student/notices/school', label: 'School Notices', icon: Bell },
+    { to: '/student/notices/class', label: 'Class Notices', icon: Megaphone },
   ]
 
   return (
@@ -84,10 +86,9 @@ export default function StudentSidebar({ studentClass = null, className = '', on
               key={i.to}
               to={i.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
+                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
                 }`
               }
             >

@@ -35,8 +35,8 @@ export default function StudentTimetable() {
           {/* Month filter */}
           <div className="mb-4 flex items-center gap-3">
             <label className="text-sm text-gray-700">Filter by month:</label>
-            <input type="month" value={month} onChange={(e)=> setMonth(e.target.value)} className="px-3 py-2 border rounded-md" />
-            {month && <button onClick={()=> setMonth('')} className="text-sm text-indigo-600 hover:underline">Clear</button>}
+            <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="px-3 py-2 border rounded-md" />
+            {month && <button onClick={() => setMonth('')} className="text-sm text-indigo-600 hover:underline">Clear</button>}
           </div>
 
           {/* Loading state */}
@@ -61,6 +61,12 @@ export default function StudentTimetable() {
                 >
                   <div className="flex justify-between items-start">
                     <div>
+                      {t.date && (
+                        <div className="text-sm font-semibold text-indigo-700 mb-2">
+                          {new Date(t.date).toLocaleDateString()}
+                        </div>
+                      )}
+
                       {/* Timetable Content */}
                       {t.content && t.content.startsWith('http') ? (
                         <a
@@ -70,11 +76,41 @@ export default function StudentTimetable() {
                           className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium"
                         >
                           <LinkIcon className="w-4 h-4" />
-                          Open Timetable
+                          Open Timetable Link
                         </a>
                       ) : (
-                        <div className="font-medium text-gray-900">
-                          {t.content || 'No timetable content'}
+                        t.content && <div className="font-medium text-gray-900">
+                          {t.content}
+                        </div>
+                      )}
+
+                      {t.imageUrl && (
+                        <div className="mt-3">
+                          <img src={t.imageUrl} alt="Timetable" className="max-w-sm rounded-lg shadow-sm mb-2" style={{ maxHeight: '300px', objectFit: 'contain' }} />
+                          <button
+                            onClick={async () => {
+                              try {
+                                const response = await fetch(t.imageUrl);
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                const filename = t.imageUrl.split('/').pop() || 'timetable_image';
+                                link.setAttribute('download', filename);
+                                document.body.appendChild(link);
+                                link.click();
+                                link.parentNode.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                              } catch (error) {
+                                console.error('Download failed', error);
+                                window.open(t.imageUrl, '_blank');
+                              }
+                            }}
+                            className="text-sm text-indigo-600 hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer"
+                          >
+                            <LinkIcon className="w-4 h-4" />
+                            View Full Image / Download
+                          </button>
                         </div>
                       )}
 
@@ -91,7 +127,7 @@ export default function StudentTimetable() {
 
                     {/* Upload Date */}
                     <div className="text-xs text-gray-500">
-                      {new Date(t.createdAt).toLocaleString()}
+                      Uploaded: {new Date(t.createdAt).toLocaleString()}
                     </div>
                   </div>
                 </div>
