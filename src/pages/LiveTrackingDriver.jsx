@@ -10,6 +10,7 @@ export default function LiveTrackingDriver(){
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const watchRef = useRef(null)
+  const pollRef = useRef(null)
 
   useEffect(()=>{
     const load = async ()=>{
@@ -36,11 +37,24 @@ export default function LiveTrackingDriver(){
         const r = await API.post('/driver/ride/start', { lat, lng })
         setLive(r.data?.live || { lastLocation: { lat, lng }, active: true })
         setIsSharing(true)
+
+        // Primary: use watchPosition for continuous updates
         watchRef.current = navigator.geolocation.watchPosition((p)=>{
           const { latitude, longitude } = p.coords
           sendLocation(latitude, longitude)
           setLive(prev=>({...prev, lastLocation: { lat: latitude, lng: longitude }, updatedAt: new Date(), active: true }))
         }, (e)=> setError(e?.message || 'watch error'), { enableHighAccuracy:true })
+
+        // Secondary: start a 5s polling fallback to ensure updates even when watch callbacks may be throttled
+        if (pollRef.current == null) {
+          pollRef.current = setInterval(() => {
+            navigator.geolocation.getCurrentPosition((p) => {
+              const { latitude, longitude } = p.coords
+              sendLocation(latitude, longitude)
+              setLive(prev=>({...prev, lastLocation: { lat: latitude, lng: longitude }, updatedAt: new Date(), active: true }))
+            }, (e) => { /* ignore individual failures */ }, { enableHighAccuracy: true })
+          }, 5000)
+        }
       }catch(e){ setError(e?.response?.data?.error || e.message || String(e)) }
       finally{ setLoading(false) }
     }, (e)=>{ setError(e?.message || 'Unable to get location'); setLoading(false) }, { enableHighAccuracy: true })
@@ -51,6 +65,7 @@ export default function LiveTrackingDriver(){
       await API.post('/driver/ride/stop')
       setIsSharing(false)
       if (watchRef.current != null) { navigator.geolocation.clearWatch(watchRef.current); watchRef.current = null }
+      if (pollRef.current != null) { clearInterval(pollRef.current); pollRef.current = null }
       if (data.bus && (data.bus._id || data.bus.id)) {
         const id = data.bus._id || data.bus.id
         const r = await API.get(`/admin/buses/${id}/live`)
@@ -58,6 +73,23 @@ export default function LiveTrackingDriver(){
       }
     }catch(e){ setError(e?.response?.data?.error || e.message || String(e)) }
   }
+
+  // Try to maintain polling/updates when visibility changes (best-effort).
+  useEffect(() => {
+    const onVis = () => {
+      if (!isSharing) return
+      // when tab becomes visible, re-establish a getCurrentPosition (forces an immediate update)
+      if (!document.hidden) {
+        navigator.geolocation.getCurrentPosition((p)=>{
+          const { latitude, longitude } = p.coords
+          sendLocation(latitude, longitude)
+          setLive(prev=>({...prev, lastLocation: { lat: latitude, lng: longitude }, updatedAt: new Date(), active: true }))
+        }, ()=>{}, { enableHighAccuracy: true })
+      }
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [isSharing])
 
   return (
     <div className="p-6">
