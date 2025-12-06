@@ -154,6 +154,39 @@ export default function Classes() {
     }
   }
 
+  // Transfer modal state
+  const [transferOpen, setTransferOpen] = useState(false)
+  const [transferSource, setTransferSource] = useState('')
+  const [transferTarget, setTransferTarget] = useState('')
+  const [transferLoading, setTransferLoading] = useState(false)
+
+  const openTransfer = () => {
+    setTransferSource('')
+    setTransferTarget('')
+    setTransferOpen(true)
+  }
+
+  const doTransfer = async () => {
+    if (!transferSource || !transferTarget) return alert('Select source and target class')
+    if (transferSource === transferTarget) return alert('Source and target must be different')
+    if (!confirm('Move all students from the source class to the target class? This will empty the source class.')) return
+    try {
+      setTransferLoading(true)
+      const res = await API.post('/admin/classes/transfer', {
+        sourceClassId: transferSource,
+        targetClassId: transferTarget
+      })
+      alert(res.data.message || 'Transfer completed')
+      setTransferOpen(false)
+      load()
+    } catch (err) {
+      console.error(err)
+      alert('Transfer failed: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setTransferLoading(false)
+    }
+  }
+
   // ... rest of editing functions ...
 
   const edit = (c) => {
@@ -204,11 +237,11 @@ export default function Classes() {
           </div>
           <div>
             <button
-              onClick={promoteStudents}
-              className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 shadow flex items-center gap-2"
-              title="Automatically promote students to next grade"
+              onClick={openTransfer}
+              className="ml-3 px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 shadow flex items-center gap-2"
+              title="Promote students (manual transfer between classes)"
             >
-              <GraduationCap className="w-5 h-5" /> Promote Students
+              Promote Students
             </button>
           </div>
         </div>
@@ -492,6 +525,38 @@ export default function Classes() {
                 >
                   Save Assignments
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Transfer Modal */}
+        {transferOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 p-6">
+              <h4 className="text-lg font-bold">Move Class Students</h4>
+              <p className="text-sm text-gray-500 mt-1">Select a source class and a target class. All students from the source will be moved to the target.</p>
+
+              <div className="mt-4 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Source Class</label>
+                  <select className="w-full px-3 py-2 border rounded" value={transferSource} onChange={(e) => setTransferSource(e.target.value)}>
+                    <option value="">-- Select source class --</option>
+                    {classes.map(c => <option key={c._id} value={c._id}>{c.name} ({c.students?.length || 0} students)</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Target Class</label>
+                  <select className="w-full px-3 py-2 border rounded" value={transferTarget} onChange={(e) => setTransferTarget(e.target.value)}>
+                    <option value="">-- Select target class --</option>
+                    {classes.map(c => <option key={c._id} value={c._id}>{c.name} ({c.students?.length || 0} students)</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <button onClick={() => setTransferOpen(false)} className="px-4 py-2 rounded border">Cancel</button>
+                <button onClick={doTransfer} disabled={transferLoading} className="px-4 py-2 rounded bg-sky-600 text-white">{transferLoading ? 'Moving...' : 'Move Students'}</button>
               </div>
             </div>
           </div>
