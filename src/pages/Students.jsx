@@ -26,14 +26,21 @@ function StudentRow({ s, onEdit, onDelete, onViewQR }) {
               <span>{s.email || 'No Email'}</span>
               <span>•</span>
               <span>Adm No: {s.admissionNumber || '-'}</span>
+              {s.admissionDate && (
+                <>
+                  <span>•</span>
+                  <span>Admission: {new Date(s.admissionDate).toLocaleDateString()}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 mt-2 text-sm text-gray-600">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 mt-2 text-sm text-gray-600">
           <div><span className="font-medium">Class:</span> {typeof s.class === 'object' && s.class ? s.class.name : s.class || '—'}</div>
           <div><span className="font-medium">Roll:</span> {s.rollNumber || '—'}</div>
           <div><span className="font-medium">Phone:</span> {s.phone || '—'}</div>
           <div><span className="font-medium">Father:</span> {s.fatherName || '—'}</div>
+          <div><span className="font-medium">Joined In:</span> {typeof s.originalClass === 'object' && s.originalClass ? s.originalClass.name : s.originalClass || '—'}</div>
           <div className="col-span-2 truncate"><span className="font-medium">Address:</span> {s.address || '—'}</div>
           <div><span className="font-medium">Aadhar:</span> {s.aadharCard || '—'}</div>
         </div>
