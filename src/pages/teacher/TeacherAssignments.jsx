@@ -8,6 +8,7 @@ export default function TeacherAssignments() {
   const [form, setForm] = useState({ title: '', description: '', dueDate: '', classId: '' })
   const [editing, setEditing] = useState(null)
   const [assignedClass, setAssignedClass] = useState(null)
+  const [teachingClasses, setTeachingClasses] = useState([])
   const [loading, setLoading] = useState(false)
 
   const load = async () => {
@@ -34,6 +35,18 @@ export default function TeacherAssignments() {
       }
     }
     loadClass()
+    // also load all classes this teacher teaches so we can allow switching
+    const loadTeaching = async () => {
+      try {
+        const r = await API.get('/teacher/teaching-classes')
+        setTeachingClasses(r.data || [])
+        // if no assignedClass but teachingClasses available, pick first
+        if ((!res || !res.data) && r.data && r.data.length > 0) {
+          setForm((f) => ({ ...f, classId: r.data[0]._id }))
+        }
+      } catch (e) { console.error('Failed loading teaching classes', e) }
+    }
+    loadTeaching()
   }, [])
 
   useEffect(() => {
@@ -102,14 +115,22 @@ export default function TeacherAssignments() {
             className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 mb-8"
           >
             <div className="text-sm text-gray-700 mb-3">
-              <span className="font-medium text-gray-900">Class:</span>{' '}
-              {assignedClass ? (
-                <span className="text-indigo-700 font-semibold">
-                  {assignedClass.name}
-                </span>
-              ) : (
-                <span className="text-gray-500">Not assigned</span>
-              )}
+                <span className="font-medium text-gray-900">Class:</span>{' '}
+                {teachingClasses && teachingClasses.length > 0 ? (
+                  <select
+                    value={form.classId || ''}
+                    onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))}
+                    className="ml-2 px-3 py-1 rounded border border-gray-200"
+                  >
+                    {teachingClasses.map((c) => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </select>
+                ) : assignedClass ? (
+                  <span className="text-indigo-700 font-semibold">{assignedClass.name}</span>
+                ) : (
+                  <span className="text-gray-500">Not assigned</span>
+                )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">

@@ -7,10 +7,23 @@ export default function TeacherTimetable() {
   const [timetables, setTimetables] = useState([])
   const [form, setForm] = useState({ classId: '', content: '', date: '' })
   const [assignedClass, setAssignedClass] = useState(null)
+  const [teachingClasses, setTeachingClasses] = useState([])
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState(null)
 
   // ... existing load/useEffect ...
+  useEffect(() => {
+    const loadTeaching = async () => {
+      try {
+        const r = await API.get('/teacher/teaching-classes')
+        setTeachingClasses(r.data || [])
+        if ((!assignedClass || !assignedClass._id) && r.data && r.data.length > 0) {
+          setForm((f) => ({ ...f, classId: r.data[0]._id }))
+        }
+      } catch (e) { console.error('Failed loading teaching classes', e) }
+    }
+    loadTeaching()
+  }, [])
 
   const submit = async (e) => {
     e.preventDefault()
@@ -75,11 +88,23 @@ export default function TeacherTimetable() {
           <form onSubmit={submit} className="space-y-4">
             <div className="text-sm text-gray-600">
               Class:{' '}
-              <span className="font-medium text-indigo-700">
-                {assignedClass
-                  ? assignedClass.name
-                  : form.classId || 'Not selected'}
-              </span>
+              {teachingClasses && teachingClasses.length > 0 ? (
+                <select
+                  value={form.classId || ''}
+                  onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))}
+                  className="ml-2 px-3 py-1 rounded border border-gray-200"
+                >
+                  {teachingClasses.map((c) => (
+                    <option key={c._id} value={c._id}>{c.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className="font-medium text-indigo-700">
+                  {assignedClass
+                    ? assignedClass.name
+                    : form.classId || 'Not selected'}
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
