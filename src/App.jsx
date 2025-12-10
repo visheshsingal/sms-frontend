@@ -73,6 +73,10 @@ export default function App() {
           <Route path='bus-incharges' element={<BusIncharges />} />
           <Route path='routes' element={<RoutesPage />} />
           <Route path='bus-attendance' element={<BusAttendance />} />
+          <Route path='bus-attendance/morning' element={<BusAttendance session="morning" />} />
+          <Route path='bus-attendance/evening' element={<BusAttendance session="evening" />} />
+          <Route path='scan/morning' element={<QRScanner session="morning" />} />
+          <Route path='scan/evening' element={<QRScanner session="evening" />} />
           {/* Finance section temporarily hidden — comment out for now. Can re-enable later by restoring the import and this route. */}
           {/* <Route path='finance' element={<Finance/>} /> */}
           <Route path='attendance' element={<Attendance />} />
@@ -130,11 +134,7 @@ export default function App() {
           <Route path='dashboard' element={<BusInchargeDashboard />} />
           <Route path='buses' element={<Buses />} />
           <Route path='routes' element={<RoutesPage />} />
-          {/* <Route path='bus-attendance' element={<BusAttendance />} /> */}
-          <Route path='attendance/morning' element={<BusAttendance session="morning" />} />
-          <Route path='attendance/evening' element={<BusAttendance session="evening" />} />
-          <Route path='scan/morning' element={<QRScanner session="morning" />} />
-          <Route path='scan/evening' element={<QRScanner session="evening" />} />
+          {/* Attendance and scanning moved to Admin panel */}
           <Route path='live' element={<LiveTrackingAdmin />} />
         </Route>
         <Route path='/notices' element={<Notices />} />

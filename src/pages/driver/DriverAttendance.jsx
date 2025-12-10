@@ -3,6 +3,8 @@ import API from '../../utils/api'
 
 export default function DriverAttendance({ session = 'morning' }) {
   const [busInfo, setBusInfo] = useState(null)
+  const [assignedBuses, setAssignedBuses] = useState([])
+  const [selectedBusId, setSelectedBusId] = useState('')
   const [students, setStudents] = useState([]) // combined roster + status
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [loading, setLoading] = useState(false)
@@ -10,13 +12,13 @@ export default function DriverAttendance({ session = 'morning' }) {
 
   useEffect(() => { loadRoster() }, [])
 
-  // Reload attendance status when date, session or busInfo (roster) is ready
+  // Reload attendance status when date, session or selected bus changes
   useEffect(() => {
-    if (busInfo && busInfo.busId) {
+    if ((busInfo && busInfo.busId) || selectedBusId) {
       loadAttendance();
       loadReport();
     }
-  }, [date, session, busInfo?.busId]); // Depend on ID to avoid deep object loop
+  }, [date, session, busInfo?.busId, selectedBusId]); // Depend on ID to avoid deep object loop
 
   async function loadRoster() {
     try {
@@ -30,34 +32,44 @@ export default function DriverAttendance({ session = 'morning' }) {
         return;
       }
 
-      if (res && res.data && res.data.bus) {
-        const bus = res.data.bus
-        const info = { busId: bus._id, number: bus.number, route: res.data.route };
-        setBusInfo(info)
+      if (res && res.data) {
+        // driver.me now returns { driver, buses, route }
+        const buses = res.data.buses || (res.data.bus ? [res.data.bus] : [])
+        setAssignedBuses(buses)
+        if (buses.length === 1) {
+          const bus = buses[0]
+          setSelectedBusId(bus._id)
+          const info = { busId: bus._id, number: bus.number, route: bus.route || res.data.route };
+          setBusInfo(info)
 
-        // flatten students from route stops if available
-        const stops = (res.data.route && res.data.route.stops) ? res.data.route.stops : []
-        const list = []
-        for (const stop of stops) {
-          for (const s of (stop.students || [])) {
-            if (!list.find(x => String(x._id) === String(s._id))) list.push(s)
+          const stops = (bus.route && bus.route.stops) ? bus.route.stops : (res.data.route && res.data.route.stops ? res.data.route.stops : [])
+          const list = []
+          for (const stop of stops) {
+            for (const s of (stop.students || [])) {
+              if (!list.find(x => String(x._id) === String(s._id))) list.push(s)
+            }
           }
+          // Initialize with 'present'
+          const mapped = list.map(s => ({ studentId: s._id, name: `${s.firstName || ''} ${s.lastName || ''}`.trim(), rollNo: s.rollNumber || '', status: 'present' }))
+          setStudents(mapped)
+        } else if (buses.length > 1) {
+          // multiple buses assigned; require selection before loading roster
+          setBusInfo(null)
+          setStudents([])
+        } else {
+          setBusInfo(null)
+          setStudents([])
         }
-        // Initialize with 'present'
-        const mapped = list.map(s => ({ studentId: s._id, name: `${s.firstName || ''} ${s.lastName || ''}`.trim(), rollNo: s.rollNumber || '', status: 'present' }))
-        setStudents(mapped)
-      } else {
-        setBusInfo(null)
-        setStudents([])
       }
     } catch (err) { console.error(err); }
   }
 
   async function loadAttendance() {
-    if (!busInfo?.busId) return;
+    const busIdToUse = selectedBusId || busInfo?.busId
+    if (!busIdToUse) return;
     try {
       // Fetch existing records for this date/session
-      const res = await API.get('/driver/attendance', { params: { date, session } });
+      const res = await API.get('/driver/attendance', { params: { date, session, busId: busIdToUse } });
       const records = res.data.records || [];
 
       if (records.length > 0) {
@@ -77,11 +89,12 @@ export default function DriverAttendance({ session = 'morning' }) {
   const toggleStatus = (id, status) => setStudents(prev => prev.map(s => s.studentId === id ? { ...s, status } : s))
 
   const submit = async () => {
-    if (!busInfo) return
+    const busIdToUse = selectedBusId || busInfo?.busId
+    if (!busIdToUse) return
     setLoading(true)
     try {
       const records = students.map(s => ({ studentId: s.studentId, status: s.status }))
-      await API.post('/driver/attendance', { date, records, session }) // Include session
+      await API.post('/driver/attendance', { date, records, session, busId: busIdToUse }) // Include session and busId
       alert('Saved')
       loadReport()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
@@ -95,18 +108,55 @@ export default function DriverAttendance({ session = 'morning' }) {
 
   const loadReport = async () => {
     try {
-      const res = await API.get('/driver/attendance/report', { params: { startDate: date, endDate: date, session } })
+      const busIdToUse = selectedBusId || busInfo?.busId
+      const res = await API.get('/driver/attendance/report', { params: { startDate: date, endDate: date, session, busId: busIdToUse } })
       setReport(res.data)
     } catch (err) { console.error(err) }
   }
+
+  // When driver selects a bus (if multiple assigned), load its route/students
+  useEffect(() => {
+    if (!selectedBusId) return
+    let mounted = true
+    const fetchBus = async () => {
+      try {
+        const res = await API.get(`/admin/buses/${selectedBusId}`)
+        if (!mounted) return
+        const bus = res.data
+        const info = { busId: bus._id, number: bus.number, route: bus.route }
+        setBusInfo(info)
+        const stops = (bus.route && bus.route.stops) ? bus.route.stops : []
+        const list = []
+        for (const stop of stops) for (const s of (stop.students || [])) if (!list.find(x => String(x._id) === String(s._id))) list.push(s)
+        const mapped = list.map(s => ({ studentId: s._id, name: `${s.firstName || ''} ${s.lastName || ''}`.trim(), rollNo: s.rollNumber || '', status: 'present' }))
+        setStudents(mapped)
+      } catch (err) {
+        console.error('Failed loading selected bus info', err)
+      }
+    }
+    fetchBus()
+    return () => { mounted = false }
+  }, [selectedBusId])
 
   return (
     <main className="min-h-screen p-6">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl p-6 shadow">
         <h2 className="text-lg font-semibold mb-4">Bus Attendance ({session.charAt(0).toUpperCase() + session.slice(1)})</h2>
-        {!busInfo ? <div className="text-sm text-gray-600">Loading assigned bus...</div> : (
+        {!busInfo && assignedBuses.length <= 1 ? <div className="text-sm text-gray-600">Loading assigned bus...</div> : (
+          <>
+            {assignedBuses.length > 1 && (
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Bus</label>
+                <select value={selectedBusId} onChange={e => setSelectedBusId(e.target.value)} className="px-3 py-2 border rounded w-full sm:w-64">
+                  <option value="">-- Choose Bus --</option>
+                  {assignedBuses.map(b => <option key={b._id} value={b._id}>{b.number} {b.route?.name ? `— ${b.route.name}` : ''}</option>)}
+                </select>
+              </div>
+            )}
+        
+            {(!assignedBuses.length || (assignedBuses.length === 1) || selectedBusId) && (
           <div>
-            <div className="mb-3 text-sm">Bus: <span className="font-medium">{busInfo.number || busInfo.busId}</span> • Date: <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ml-2 px-2 py-1 border rounded" /></div>
+            <div className="mb-3 text-sm">Bus: <span className="font-medium">{busInfo?.number || busInfo?.busId || (assignedBuses.find(b => b._id===selectedBusId)?.number)}</span> • Date: <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ml-2 px-2 py-1 border rounded" /></div>
             <div className="mb-2 text-xs text-gray-500">Students: {students.length} • Present: {presentCount} • Absent: {absentCount}</div>
             <div className="mb-3 flex gap-2">
               <button onClick={() => markAll('present')} className="px-3 py-1 rounded bg-green-100 text-green-700 text-sm">Mark All Present</button>
@@ -146,6 +196,8 @@ export default function DriverAttendance({ session = 'morning' }) {
             </div>
           </div>
         )}
+        </>
+      )}
       </div>
     </main>
   )

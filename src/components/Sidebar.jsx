@@ -9,6 +9,7 @@ import {
   GraduationCap,
   DollarSign,
   ClipboardList,
+  QrCode,
   FileText,
   Bell,
   X,
@@ -26,8 +27,11 @@ const items = [
   { to: '/admin/routes', label: 'Routes', icon: MapPin },
   // Finance temporarily removed from sidebar. Uncomment if needed later:
   // { to: '/admin/finance', label: 'Finance', icon: DollarSign },
-  { to: '/admin/attendance', label: 'Mark Attendance', icon: ClipboardList },
-  { to: '/admin/bus-attendance', label: 'Bus Attendance', icon: Bus },
+  { to: '/admin/attendance', label: 'Mark Attendance (Students)', icon: ClipboardList },
+  { to: '/admin/bus-attendance', label: 'Bus Attendance (Morning)', icon: Bus },
+  { to: '/admin/bus-attendance/evening', label: 'Bus Attendance (Evening)', icon: ClipboardList },
+  { to: '/admin/scan/morning', label: 'Bus Scan (Morning)', icon: QrCode },
+  { to: '/admin/scan/evening', label: 'Bus Scan (Evening)', icon: QrCode },
   { to: '/admin/attendance-report', label: 'Attendance Report', icon: FileText },
   { to: '/admin/notices', label: 'Notices', icon: Bell },
 ]

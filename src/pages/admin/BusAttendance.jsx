@@ -12,7 +12,23 @@ export default function BusAttendance({ session = 'morning' }) {
   useEffect(() => { loadBuses() }, [])
 
   const loadBuses = async () => {
-    try { const res = await API.get('/admin/buses'); setBuses(res.data) } catch (e) { console.error(e) }
+    try {
+      const res = await API.get('/admin/buses');
+      let list = res.data || [];
+      // If a session prop is provided, filter buses by route startTime roughly
+      // morning => routes starting before 12:00, evening => routes starting at/after 12:00
+      if (session) {
+        list = list.filter(b => {
+          const rt = b.route && b.route.startTime;
+          if (!rt) return true; // keep if route missing
+          const hour = parseInt(String(rt).split(':')[0], 10);
+          if (session === 'morning') return hour < 12;
+          if (session === 'evening') return hour >= 12;
+          return true;
+        })
+      }
+      setBuses(list)
+    } catch (e) { console.error(e) }
   }
 
   const loadBus = async (id) => {

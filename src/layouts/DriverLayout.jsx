@@ -17,6 +17,10 @@ export default function DriverLayout() {
                 const res = await API.get('/driver/me')
                 const payload = res.data || {}
 
+                // Normalize new response shape: { driver, buses, route }
+                // Ensure `payload.bus` exists for backwards compatibility (use first assigned bus)
+                if (!payload.bus && Array.isArray(payload.buses) && payload.buses.length > 0) payload.bus = payload.buses[0]
+
                 if (!payload.route && payload.bus && payload.bus.route) {
                     try {
                         const routeId = typeof payload.bus.route === 'string'

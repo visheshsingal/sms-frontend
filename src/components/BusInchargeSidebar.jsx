@@ -20,10 +20,7 @@ export default function BusInchargeSidebar({ className = '', onClose }) {
         { to: '/bus-incharge/dashboard', label: 'Dashboard', icon: Home },
         { to: '/bus-incharge/buses', label: 'Buses', icon: Bus },
         { to: '/bus-incharge/routes', label: 'Routes', icon: Map },
-        { to: '/bus-incharge/attendance/morning', label: 'Morning Attendance', icon: ClipboardList },
-        { to: '/bus-incharge/attendance/evening', label: 'Evening Attendance', icon: ClipboardList },
-        { to: '/bus-incharge/scan/morning', label: 'Morning Scan', icon: QrCode },
-        { to: '/bus-incharge/scan/evening', label: 'Evening Scan', icon: QrCode },
+        // Attendance and scanning handled from Admin panel now
         { to: '/bus-incharge/live', label: 'Live Tracking', icon: MapPin },
         // Added Notices link which was missing in original sidebar but likely needed for notification symmetry
     ]

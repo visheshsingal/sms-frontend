@@ -7,6 +7,7 @@ export default function LiveTrackingDriver(){
   const [data, setData] = useState({ driver: null, bus: null })
   const [isSharing, setIsSharing] = useState(false)
   const [live, setLive] = useState(null)
+    const [selectedBus, setSelectedBus] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const watchRef = useRef(null)
@@ -16,7 +17,10 @@ export default function LiveTrackingDriver(){
     const load = async ()=>{
       try{
         const res = await API.get('/driver/me')
-        setData(res.data || {})
+        const payload = res.data || {}
+        setData(payload)
+          // auto-select when driver has exactly one bus
+          if (Array.isArray(payload.buses) && payload.buses.length === 1) setSelectedBus(payload.buses[0])
       }catch(e){ console.warn(e) }
     }
     load()
@@ -29,12 +33,15 @@ export default function LiveTrackingDriver(){
   const start = async () => {
     if (!navigator.geolocation) return setError('Geolocation not supported')
     if (!data.bus) return setError('No bus assigned')
+      const bus = selectedBus || data.bus || (Array.isArray(data.buses) && data.buses[0])
+      if (!bus) return setError('No bus assigned')
+      const busId = bus._id || bus.id || bus
     setError(null)
     setLoading(true)
     navigator.geolocation.getCurrentPosition(async (pos) => {
       try{
         const { latitude: lat, longitude: lng } = pos.coords
-        const r = await API.post('/driver/ride/start', { lat, lng })
+        const r = await API.post('/driver/ride/start', { lat, lng, busId })
         setLive(r.data?.live || { lastLocation: { lat, lng }, active: true })
         setIsSharing(true)
 
@@ -62,7 +69,9 @@ export default function LiveTrackingDriver(){
 
   const stop = async () => {
     try{
-      await API.post('/driver/ride/stop')
+      const bus = selectedBus || data.bus || (Array.isArray(data.buses) && data.buses[0])
+      const busId = bus? (bus._id || bus.id || bus) : undefined
+      await API.post('/driver/ride/stop', busId ? { busId } : {})
       setIsSharing(false)
       if (watchRef.current != null) { navigator.geolocation.clearWatch(watchRef.current); watchRef.current = null }
       if (pollRef.current != null) { clearInterval(pollRef.current); pollRef.current = null }
@@ -95,7 +104,22 @@ export default function LiveTrackingDriver(){
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Live Tracking (Driver)</h2>
       <div className="space-y-4">
-        <div>Bus: {data.bus ? (data.bus.number || data.bus) : 'No bus assigned'}</div>
+        <div>
+          Bus: {(!Array.isArray(data.buses) || data.buses.length <= 1) ? (
+            data.bus ? (data.bus.number || data.bus) : (Array.isArray(data.buses) && data.buses[0] ? (data.buses[0].number || data.buses[0]) : 'No bus assigned')
+          ) : (
+            <select value={selectedBus?._id || (selectedBus?.id) || selectedBus || ''} onChange={(e)=>{
+              const id = e.target.value
+              const found = data.buses.find(b => (b._id || b.id || b) === id)
+              setSelectedBus(found || id)
+            }} className="border rounded p-1">
+              <option value="">Select bus</option>
+              {data.buses.map(b => (
+                <option key={b._id || b.id || b} value={b._id || b.id || b}>{b.number || (b._id || b.id || b)}</option>
+              ))}
+            </select>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           {!isSharing ? (
             <button onClick={start} disabled={loading} className="px-4 py-2 bg-indigo-600 text-white rounded inline-flex items-center gap-2"> <Play/> {loading ? 'Starting...' : 'Start Ride'}</button>
