@@ -1,8 +1,21 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Home, Bus, Map, ClipboardList, MapPin, QrCode, X, LogOut } from 'lucide-react'
+import { Home, Bus, Map, ClipboardList, MapPin, QrCode, X, LogOut, Megaphone } from 'lucide-react'
+import API from '../utils/api'
 
 export default function BusInchargeSidebar({ className = '', onClose }) {
+    const [unreadNotices, setUnreadNotices] = useState(0)
+
+    useEffect(() => {
+       const loadCounts = async () => {
+          try {
+             const res = await API.get('/notices/unread')
+             setUnreadNotices(res.data.count || 0)
+          } catch (err) { console.error(err) }
+       }
+       loadCounts()
+    }, [])
+
     const items = [
         { to: '/bus-incharge/dashboard', label: 'Dashboard', icon: Home },
         { to: '/bus-incharge/buses', label: 'Buses', icon: Bus },
@@ -12,7 +25,13 @@ export default function BusInchargeSidebar({ className = '', onClose }) {
         { to: '/bus-incharge/scan/morning', label: 'Morning Scan', icon: QrCode },
         { to: '/bus-incharge/scan/evening', label: 'Evening Scan', icon: QrCode },
         { to: '/bus-incharge/live', label: 'Live Tracking', icon: MapPin },
+        // Added Notices link which was missing in original sidebar but likely needed for notification symmetry
     ]
+    // If notices page exists for bus incharge, we add it. 
+    // Checking routes... App.jsx shows <Route path='/notices' element={<Notices />} /> is global.
+    // So we can route them there.
+    items.push({ to: '/notices', label: 'Notices', icon: Megaphone, badge: unreadNotices })
+
 
     const logout = () => {
         localStorage.clear()
@@ -49,7 +68,10 @@ export default function BusInchargeSidebar({ className = '', onClose }) {
                         <NavLink
                             key={i.to}
                             to={i.to}
-                            onClick={onClose} // Auto-close on mobile when clicked
+                            onClick={(e) => {
+                                if (i.badge) setUnreadNotices(0)
+                                if (onClose) onClose()
+                            }} 
                             end={i.to === '/bus-incharge/dashboard'} // Exact match for dashboard
                             className={({ isActive }) =>
                                 `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
@@ -59,7 +81,12 @@ export default function BusInchargeSidebar({ className = '', onClose }) {
                             }
                         >
                             <Icon className="w-4 h-4" />
-                            {i.label}
+                            <span className="flex-1">{i.label}</span>
+                            {i.badge > 0 && (
+                               <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center flex items-center justify-center font-bold shadow-sm">
+                                  {i.badge}
+                               </span>
+                            )}
                         </NavLink>
                     )
                 })}

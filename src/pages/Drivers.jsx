@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import API from '../utils/api'
-import { Users, UserPlus, Edit2, Trash2, Save, X } from 'lucide-react'
+import { Users, UserPlus, Edit2, Trash2, Save, X, Eye, EyeOff } from 'lucide-react'
 
 function DriverRow({ d, onEdit, onDelete }) {
   return (
@@ -47,6 +47,7 @@ export default function Drivers() {
   const [query, setQuery] = useState('')
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', licenseNumber: '', username: '', password: '' })
   const [editing, setEditing] = useState(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const load = async () => { const res = await API.get('/admin/drivers'); setDrivers(res.data) }
 
@@ -108,13 +109,22 @@ export default function Drivers() {
               onChange={(e)=>setForm(f=>({...f, username:e.target.value}))}
               className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200"
             />
-            <input
-              type="password"
-              placeholder={editing ? 'Password (leave blank to keep)' : 'Password'}
-              value={form.password}
-              onChange={(e)=>setForm(f=>({...f, password:e.target.value}))}
-              className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder={editing ? 'Password (leave blank to keep)' : 'Password'}
+                value={form.password}
+                onChange={(e)=>setForm(f=>({...f, password:e.target.value}))}
+                className="w-full rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             <div className="md:col-span-3 flex justify-end">
               <button type="submit" className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white shadow-sm transition hover:bg-indigo-700">

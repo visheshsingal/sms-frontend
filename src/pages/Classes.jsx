@@ -66,21 +66,64 @@ function TeacherMultiSelect({ teachers = [], value = [], onChange }) {
   )
 }
 
-// Helper for single teacher select
-function TeacherSelect({ teachers = [], value, onChange }) {
+// Helper for single searchable teacher select
+function TeacherSelect({ teachers = [], value, onChange, placeholder = '-- Select Class Teacher --' }) {
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
+
+  const filtered = teachers.filter((t) =>
+    `${t.firstName} ${t.lastName}`.toLowerCase().includes(q.toLowerCase())
+  )
+
+  const selectedTeacher = teachers.find(t => t._id === value)
+
   return (
-    <select
-      value={value || ''}
-      onChange={(e) => onChange(e.target.value || null)}
-      className="px-3 py-2 border border-gray-300 rounded bg-white w-full"
-    >
-      <option value="">-- Select Class Teacher --</option>
-      {teachers.map((t) => (
-        <option key={t._id} value={t._id}>
-          {t.firstName} {t.lastName}
-        </option>
-      ))}
-    </select>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        className="w-full text-left px-3 py-2 border border-gray-300 rounded bg-white flex items-center justify-between"
+      >
+        <span className={`truncate text-sm ${selectedTeacher ? 'text-gray-900' : 'text-gray-500'}`}>
+          {selectedTeacher ? `${selectedTeacher.firstName} ${selectedTeacher.lastName}` : placeholder}
+        </span>
+        <span className="text-gray-400 ml-2">▾</span>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded shadow-lg p-2 max-h-56 overflow-auto">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search..."
+            className="w-full px-3 py-2 border border-gray-200 rounded mb-2 text-sm outline-none focus:border-indigo-500"
+            autoFocus
+          />
+          <div className="space-y-1">
+            <div
+              onClick={() => { onChange(null); setOpen(false); }}
+              className="p-2 rounded hover:bg-gray-50 cursor-pointer text-sm text-gray-500 italic"
+            >
+              None (Clear)
+            </div>
+            {filtered.map((t) => (
+              <div
+                key={t._id}
+                onClick={() => {
+                  onChange(t._id)
+                  setOpen(false)
+                  setQ('')
+                }}
+                className={`p-2 rounded hover:bg-indigo-50 cursor-pointer text-sm ${value === t._id ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-800'}`}
+              >
+                {t.firstName} {t.lastName}
+              </div>
+            ))}
+            {filtered.length === 0 && <div className="text-sm text-gray-500 p-2">No teachers found</div>}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -300,12 +343,13 @@ export default function Classes() {
                   className="px-3 py-2 border border-gray-300 rounded w-full sm:w-1/3"
                 />
                 <div className="flex-1">
-                  <TeacherMultiSelect
+                  <TeacherSelect
                     teachers={teachers}
-                    value={s.teacherIds || []}
-                    onChange={(ids) => {
+                    placeholder="-- Select Subject Teacher --"
+                    value={s.teacherIds && s.teacherIds.length > 0 ? s.teacherIds[0] : ''}
+                    onChange={(id) => {
                       const copy = [...newSubjects]
-                      copy[idx].teacherIds = ids
+                      copy[idx].teacherIds = id ? [id] : []
                       setNewSubjects(copy)
                     }}
                   />
@@ -490,12 +534,13 @@ export default function Classes() {
                             className="px-3 py-2 border border-gray-300 rounded w-full sm:w-1/3"
                           />
                           <div className="flex-1">
-                            <TeacherMultiSelect
+                            <TeacherSelect
                               teachers={teachers}
-                              value={s.teacherIds || []}
-                              onChange={(ids) => {
+                              placeholder="-- Select Subject Teacher --"
+                              value={s.teacherIds && s.teacherIds.length > 0 ? s.teacherIds[0] : ''}
+                              onChange={(id) => {
                                 const copy = [...editingSubjects]
-                                copy[idx].teacherIds = ids
+                                copy[idx].teacherIds = id ? [id] : []
                                 setEditingSubjects(copy)
                               }}
                             />

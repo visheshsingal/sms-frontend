@@ -17,6 +17,7 @@ import {
 
 export default function TeacherSidebar({ className = '', onClose }) {
   const [assignedClass, setAssignedClass] = useState(null)
+  const [counts, setCounts] = useState({ leaves: 0, notices: 0 })
 
   useEffect(() => {
     const load = async () => {
@@ -27,7 +28,27 @@ export default function TeacherSidebar({ className = '', onClose }) {
         setAssignedClass(null)
       }
     }
+    const loadCounts = async () => {
+      try {
+        const [leavesRes, noticesRes] = await Promise.all([
+          API.get('/leaves?status=pending'),
+          // The /api/notices/unread endpoint returns { count, notices: [...] }
+          API.get('/notices/unread')
+        ])
+        
+        const leavesCount = leavesRes.data ? leavesRes.data.length : 0
+        
+        // For teachers, school notices are those without a targetClass (audience: global/teacher)
+        const notices = noticesRes.data.notices || []
+        const noticesCount = notices.filter(n => !n.targetClass).length
+        
+        setCounts({ leaves: leavesCount, notices: noticesCount })
+      } catch (err) {
+        console.error(err)
+      }
+    }
     load()
+    loadCounts()
   }, [])
 
   const items = [
@@ -41,8 +62,8 @@ export default function TeacherSidebar({ className = '', onClose }) {
     { to: '/teacher/assignments', label: 'Assignments', icon: NotebookPen },
     { to: '/teacher/timetable', label: 'Timetable', icon: Calendar },
     { to: '/teacher/progress', label: 'Student Progress', icon: BarChart3 },
-    { to: '/teacher/leaves', label: 'Leaves', icon: FileText },
-    { to: '/teacher/notices/school', label: 'School Notices', icon: Bell },
+    { to: '/teacher/leaves', label: 'Leaves', icon: FileText, badge: counts.leaves },
+    { to: '/teacher/notices/school', label: 'School Notices', icon: Bell, badge: counts.notices },
     { to: '/teacher/notices/my', label: 'My Announcements', icon: Megaphone },
     { to: '/teacher/qr-scanner', label: 'QR Scanner', icon: QrCode },
   ]
@@ -82,6 +103,14 @@ export default function TeacherSidebar({ className = '', onClose }) {
             <NavLink
               key={i.to}
               to={i.to}
+              onClick={() => {
+                // Clear badge locally
+                if (i.badge) {
+                  if (i.label === 'Leaves') setCounts(p => ({ ...p, leaves: 0 }))
+                  if (i.label === 'School Notices') setCounts(p => ({ ...p, notices: 0 }))
+                }
+                if (onClose) onClose()
+              }}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
                   ? 'bg-indigo-600 text-white shadow-md'
@@ -90,7 +119,12 @@ export default function TeacherSidebar({ className = '', onClose }) {
               }
             >
               <Icon className="w-4 h-4" />
-              {i.label}
+              <span className="flex-1">{i.label}</span>
+              {i.badge > 0 && (
+                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center flex items-center justify-center font-bold shadow-sm">
+                    {i.badge}
+                 </span>
+              )}
             </NavLink>
           )
         })}

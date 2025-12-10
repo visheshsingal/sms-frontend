@@ -1,8 +1,21 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Bus, User, MapPin, ClipboardList, X, QrCode } from 'lucide-react'
+import API from '../utils/api'
 
 export default function DriverSidebar({ driver, bus, className = '', onClose }) {
+  const [unreadNotices, setUnreadNotices] = useState(0)
+
+  useEffect(() => {
+     const loadCounts = async () => {
+        try {
+           const res = await API.get('/notices/unread')
+           setUnreadNotices(res.data.count || 0)
+        } catch (err) { console.error(err) }
+     }
+     loadCounts()
+  }, [])
+
   const items = [
     { to: '/driver/profile', label: 'Profile', icon: User },
     { to: '/driver/dashboard', label: 'Assigned Bus', icon: Bus },
@@ -11,7 +24,7 @@ export default function DriverSidebar({ driver, bus, className = '', onClose }) 
     { to: '/driver/attendance/evening', label: 'Evening Attendance', icon: ClipboardList },
     { to: '/driver/qr-scanner/morning', label: 'Morning Scan', icon: QrCode },
     { to: '/driver/qr-scanner/evening', label: 'Evening Scan', icon: QrCode },
-    { to: '/driver/notices', label: 'Notices', icon: ClipboardList }
+    { to: '/driver/notices', label: 'Notices', icon: ClipboardList, badge: unreadNotices }
   ]
 
   return (
@@ -45,12 +58,24 @@ export default function DriverSidebar({ driver, bus, className = '', onClose }) 
         {items.map(i => {
           const Icon = i.icon
           return (
-            <NavLink key={i.to} to={i.to} className={({ isActive }) =>
+            <NavLink
+               key={i.to}
+               to={i.to}
+               onClick={() => {
+                 if (i.badge) setUnreadNotices(0)
+                 if (onClose) onClose()
+               }}
+               className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-indigo-100 hover:bg-indigo-600/40 hover:text-white'
               }`
             }>
               <Icon className="w-4 h-4" />
-              {i.label}
+              <span className="flex-1">{i.label}</span>
+              {i.badge > 0 && (
+                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center flex items-center justify-center font-bold shadow-sm">
+                    {i.badge}
+                 </span>
+              )}
             </NavLink>
           )
         })}

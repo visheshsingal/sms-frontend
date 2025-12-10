@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react'
 import API from '../utils/api'
-import { Plus, Search, Trash2, Edit2, X, Save, UserCheck } from 'lucide-react'
+import { Plus, Search, Trash2, Edit2, X, Save, UserCheck, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 export default function BusIncharges() {
@@ -9,6 +9,7 @@ export default function BusIncharges() {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [editing, setEditing] = useState(null)
+    const [showPassword, setShowPassword] = useState(false)
 
     // Form State
     const [formData, setFormData] = useState({
@@ -142,7 +143,23 @@ export default function BusIncharges() {
                         <input placeholder="Address" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
 
                         {/* Password - required for new, optional for edit */}
-                        <input required={!editing} type="password" placeholder={editing ? "Password (leave blank to keep)" : "Password (required)"} value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200" />
+                        <div className="relative">
+                            <input
+                                required={!editing}
+                                type={showPassword ? "text" : "password"}
+                                placeholder={editing ? "Password (leave blank to keep)" : "Password (required)"}
+                                value={formData.password}
+                                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                className="w-full rounded border px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 pr-10"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
 
                         <div className="md:col-span-2 lg:col-span-3 flex justify-end">
                             <button type="submit" className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white shadow-sm transition hover:bg-indigo-700">

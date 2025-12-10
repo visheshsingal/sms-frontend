@@ -11,6 +11,23 @@ export default function TeacherTimetable() {
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState(null)
 
+  const load = async () => {
+    if (!form.classId) return
+    setLoading(true)
+    try {
+      const res = await API.get(`/teacher/timetable/${form.classId}`)
+      setTimetables(res.data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    load()
+  }, [form.classId])
+
   // ... existing load/useEffect ...
   useEffect(() => {
     const loadTeaching = async () => {
@@ -107,16 +124,8 @@ export default function TeacherTimetable() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                value={form.classId}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, classId: e.target.value }))
-                }
-                placeholder="Enter Class ID"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
               <input
                 type="date"
                 value={form.date}
@@ -219,7 +228,9 @@ export default function TeacherTimetable() {
                       {t.uploadedBy && (
                         <div className="text-sm text-gray-600 mt-1">
                           Uploaded by:{' '}
-                          {t.uploadedBy.firstName} {t.uploadedBy.lastName}
+                          {t.uploadedBy && t.uploadedBy.firstName 
+                            ? `${t.uploadedBy.firstName} ${t.uploadedBy.lastName || ''}`
+                            : 'Unknown Teacher'}
                         </div>
                       )}
                     </div>

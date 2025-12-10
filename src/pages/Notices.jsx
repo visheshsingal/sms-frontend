@@ -23,6 +23,36 @@ export default function Notices({ source = null }) {
     load();
   }, [source]);
 
+  // Mark all fetched notices as read when loaded?
+  // Ideally we should mark specific notices as read.
+  // The backend endpoint `/api/notices/:id/read` marks a single notice.
+  // We can iterate and mark them read, or simpler: just mark them in the `load` function after setting state.
+  
+  useEffect(() => {
+    if (notices.length > 0) {
+      // Mark these visible notices as read
+      const markReads = async () => {
+        try {
+           // We can optimistically assume they are read.
+           // To avoid spamming requests, maybe we should have a bulk read endpoint.
+           // For now, we iterate. Limiting to unread ones would be better but frontend doesn't know strictly which are unread easily without checking status.
+           // However, the user asked for "ek brr dekhne k bdd ht jae" -> implies opening this page clears the badge.
+           // To clear the badge (which comes from /notices/unread), we MUST mark them read on server.
+           // Let's create a Promise.all to mark all displayed notices as read.
+           // Limiting concurrency might be needed if many notices.
+           
+           // Better approach: Since we don't have a bulk-read endpoint, let's just mark the top 10 most recent ones?
+           // or all. Let's do all.
+           const promises = notices.map(n => API.post(`/notices/${n._id}/read`));
+           await Promise.allSettled(promises);
+        } catch (e) {
+          console.error("Failed to mark notices read", e);
+        }
+      }
+      markReads();
+    }
+  }, [notices]);
+
   const submit = async (e) => {
     e.preventDefault();
     const role = localStorage.getItem('role');

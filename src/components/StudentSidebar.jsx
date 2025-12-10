@@ -17,21 +17,38 @@ import {
 
 export default function StudentSidebar({ studentClass = null, className = '', onClose }) {
   const [assignedClass, setAssignedClass] = useState(studentClass)
+  const [counts, setCounts] = useState({ school: 0, class: 0 })
 
   useEffect(() => {
     if (studentClass) {
       setAssignedClass(studentClass)
-      return
+      // return // we continue to load counts
+    } else {
+      const load = async () => {
+        try {
+          const res = await API.get('/student/me')
+          setAssignedClass(res.data.class || null)
+        } catch (err) {
+          setAssignedClass(null)
+        }
+      }
+      load()
     }
-    const load = async () => {
+
+    const loadCounts = async () => {
       try {
-        const res = await API.get('/student/me')
-        setAssignedClass(res.data.class || null)
+        const res = await API.get('/notices/unread')
+        const notices = res.data.notices || []
+        
+        const schoolCount = notices.filter(n => !n.targetClass && !n.targetStudent).length
+        const classCount = notices.filter(n => n.targetClass).length
+        
+        setCounts({ school: schoolCount, class: classCount })
       } catch (err) {
-        setAssignedClass(null)
+        console.error(err)
       }
     }
-    load()
+    loadCounts()
   }, [studentClass])
 
   const items = [
@@ -48,8 +65,8 @@ export default function StudentSidebar({ studentClass = null, className = '', on
     { to: '/student/leaves', label: 'Leaves', icon: ClipboardList },
     { to: '/student/transport', label: 'Transport', icon: MapPin },
     { to: '/student/live', label: 'Live Tracking', icon: MapPin },
-    { to: '/student/notices/school', label: 'School Notices', icon: Bell },
-    { to: '/student/notices/class', label: 'Class Notices', icon: Megaphone },
+    { to: '/student/notices/school', label: 'School Notices', icon: Bell, badge: counts.school },
+    { to: '/student/notices/class', label: 'Class Notices', icon: Megaphone, badge: counts.class },
   ]
 
   return (
@@ -85,6 +102,13 @@ export default function StudentSidebar({ studentClass = null, className = '', on
             <NavLink
               key={i.to}
               to={i.to}
+              onClick={() => {
+                  // User clicked, clear badge locally for UX
+                  if (i.badge) {
+                    setCounts(prev => ({ ...prev, [i.label === 'School Notices' ? 'school' : 'class']: 0 }))
+                  }
+                  if (onClose) onClose()
+              }}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
                   ? 'bg-indigo-600 text-white shadow-md'
@@ -93,7 +117,12 @@ export default function StudentSidebar({ studentClass = null, className = '', on
               }
             >
               <Icon className="w-4 h-4" />
-              {i.label}
+              <span className="flex-1">{i.label}</span>
+              {i.badge > 0 && (
+                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center flex items-center justify-center font-bold shadow-sm">
+                    {i.badge}
+                 </span>
+              )}
             </NavLink>
           )
         })}

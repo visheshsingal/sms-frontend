@@ -9,6 +9,8 @@ import {
   X,
   Save,
   Briefcase,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 
 function TeacherRow({ t, onEdit, onDelete }) {
@@ -75,6 +77,7 @@ export default function Teachers() {
   })
   const [editing, setEditing] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const load = async () => {
     const res = await API.get('/admin/teachers')
@@ -253,34 +256,30 @@ export default function Teachers() {
                 />
               </div>
 
-              {/* Username/password always editable — when editing, leaving blank keeps existing credentials */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username <span className="text-sm text-gray-500">(optional — will be derived from email if omitted)</span>
-                </label>
-                <input
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                  placeholder="username"
-                  value={form.username}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, username: e.target.value }))
-                  }
-                />
-              </div>
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password {editing ? <span className="text-sm text-gray-500">(leave blank to keep)</span> : <span className="text-red-500">*</span>}
                 </label>
-                <input
-                  type="password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                  placeholder={editing ? 'password' : 'password'}
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, password: e.target.value }))
-                  }
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all pr-10"
+                    placeholder={editing ? 'password' : 'password'}
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, password: e.target.value }))
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 

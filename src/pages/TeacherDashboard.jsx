@@ -57,23 +57,38 @@ export default function TeacherDashboard() {
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Classes I Teach Card */}
+          {/* My Roles Card */}
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-all duration-300">
             <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-3">
-              <BookOpen className="w-5 h-5 text-indigo-600" /> Classes I Teach
+              <User className="w-5 h-5 text-indigo-600" /> My Roles
             </h4>
-            {teachingClasses && teachingClasses.length ? (
-              <div className="space-y-3">
-                {teachingClasses.map(cls => (
-                  <div key={cls._id} className="p-3 bg-gray-50 rounded">
-                    <div className="font-medium text-gray-900">{cls.name}</div>
-                    <div className="text-sm text-gray-600">Subjects: {cls.subjects.map(s => s.name).join(', ')}</div>
+            <div className="space-y-3">
+              {/* Class Teacher Role */}
+              {assignedClass && (
+                <div className="p-3 bg-indigo-50 rounded border border-indigo-100 flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                  <span className="font-medium text-indigo-900">
+                    Class Teacher of Class {assignedClass.name}
+                  </span>
+                </div>
+              )}
+              
+              {/* Subject Teacher Roles */}
+              {teachingClasses.map(cls => (
+                cls.subjects.map((sub, idx) => (
+                  <div key={`${cls._id}-${idx}`} className="p-3 bg-gray-50 rounded border border-gray-100 flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                    <span className="font-medium text-gray-800">
+                      {sub.name} Teacher of Class {cls.name}
+                    </span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500 italic">You are not assigned to teach any subjects yet.</div>
-            )}
+                ))
+              ))}
+
+              {!assignedClass && (!teachingClasses || teachingClasses.every(c => !c.subjects.length)) && (
+                 <div className="text-sm text-gray-500 italic">No active roles assigned.</div>
+              )}
+            </div>
           </div>
           {/* Assigned Class Card */}
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-all duration-300">
@@ -156,10 +171,7 @@ export default function TeacherDashboard() {
                 <span className="font-medium text-gray-900">Email:</span>{' '}
                 {teacher.email}
               </div>
-              <div>
-                <span className="font-medium text-gray-900">Username:</span>{' '}
-                {teacher.username}
-              </div>
+
               <div>
                 <span className="font-medium text-gray-900">Role:</span>{' '}
                 {teacher.role || 'Teacher'}

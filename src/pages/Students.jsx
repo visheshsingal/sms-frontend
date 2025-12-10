@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Edit2, Trash2, PlusCircle, Save, GraduationCap } from 'lucide-react'
+import { Edit2, Trash2, PlusCircle, Save, GraduationCap, Eye, EyeOff } from 'lucide-react'
 import API from '../utils/api'
 
 function StudentRow({ s, onEdit, onDelete, onViewQR }) {
@@ -29,8 +29,14 @@ function StudentRow({ s, onEdit, onDelete, onViewQR }) {
               {s.admissionDate && (
                 <>
                   <span>•</span>
-                  <span>Admission: {new Date(s.admissionDate).toLocaleDateString()}</span>
+                  <span>Adm: {new Date(s.admissionDate).toLocaleDateString()}</span>
                 </>
+              )}
+              {s.dob && (
+                 <>
+                   <span>•</span>
+                   <span>DOB: {new Date(s.dob).toLocaleDateString()}</span>
+                 </>
               )}
             </div>
           </div>
@@ -72,6 +78,7 @@ function StudentRow({ s, onEdit, onDelete, onViewQR }) {
 export default function Students() {
   const [students, setStudents] = useState([])
   const [query, setQuery] = useState('')
+  const [filterClass, setFilterClass] = useState('')
   const [classes, setClasses] = useState([])
   const [form, setForm] = useState({
     firstName: '',
@@ -86,10 +93,14 @@ export default function Students() {
     admissionDate: '',
     aadharCard: '',
     fatherName: '',
-    reference: ''
+    reference: '',
+    confirmPassword: '',
+    dob: ''
   })
   const [file, setFile] = useState(null)
   const [editing, setEditing] = useState(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [qrModal, setQrModal] = useState({ open: false, student: null, raw: null, loading: false, error: null })
 
   const load = async () => {
@@ -112,6 +123,12 @@ export default function Students() {
   }, [])
 
   const filteredStudents = students.filter((s) => {
+    // Filter by class
+    if (filterClass) {
+        const sClassId = typeof s.class === 'object' && s.class ? s.class._id : s.class
+        if (sClassId !== filterClass) return false
+    }
+
     const q = (query || '').toLowerCase().trim()
     if (!q) return true
     const className = typeof s.class === 'object' && s.class ? s.class.name : s.class || ''
@@ -121,6 +138,10 @@ export default function Students() {
 
   const submit = async (e) => {
     e.preventDefault()
+    if (form.password && form.password !== form.confirmPassword) {
+      alert("Passwords do not match!")
+      return
+    }
     try {
       const fd = new FormData();
       Object.keys(form).forEach(key => {
@@ -139,7 +160,7 @@ export default function Students() {
       setForm({
         firstName: '', lastName: '', email: '', class: '', password: '', phone: '',
         rollNumber: '', address: '', admissionNumber: '', admissionDate: '',
-        aadharCard: '', fatherName: '', reference: ''
+        aadharCard: '', fatherName: '', reference: '', confirmPassword: '', dob: ''
       })
       setFile(null)
       // reset file input visually if possible or just rely on state
@@ -168,7 +189,9 @@ export default function Students() {
       admissionDate: s.admissionDate ? s.admissionDate.substring(0, 10) : '',
       aadharCard: s.aadharCard || '',
       fatherName: s.fatherName || '',
-      reference: s.reference || ''
+      reference: s.reference || '',
+      confirmPassword: '',
+      dob: s.dob ? s.dob.substring(0, 10) : ''
     })
     setFile(null)
     if (document.getElementById('fileInput')) document.getElementById('fileInput').value = '';
@@ -224,7 +247,7 @@ export default function Students() {
               setForm({
                 firstName: '', lastName: '', email: '', class: '', password: '', phone: '',
                 rollNumber: '', address: '', admissionNumber: '', admissionDate: '',
-                aadharCard: '', fatherName: '', reference: ''
+                aadharCard: '', fatherName: '', reference: '', confirmPassword: '', dob: ''
               })
               setFile(null)
               if (document.getElementById('fileInput')) document.getElementById('fileInput').value = '';
@@ -266,14 +289,26 @@ export default function Students() {
               onChange={(e) => setForm((f) => ({ ...f, fatherName: e.target.value }))}
               required
             />
-            <input
-              type="date"
-              className="rounded-lg border border-gray-300 px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 transition-all"
-              placeholder="Admission Date *"
-              value={form.admissionDate}
-              onChange={(e) => setForm((f) => ({ ...f, admissionDate: e.target.value }))}
-              required
-            />
+            <div>
+              <label className="block text-sm text-gray-500 mb-1">Admission Date *</label>
+              <input
+                type="date"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 transition-all"
+                value={form.admissionDate}
+                onChange={(e) => setForm((f) => ({ ...f, admissionDate: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-500 mb-1">Date of Birth</label>
+              <input
+                type="date"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 transition-all"
+                value={form.dob}
+                onChange={(e) => setForm((f) => ({ ...f, dob: e.target.value }))}
+              />
+            </div>
 
             {/* Academic & ID Details */}
             <div className="md:col-span-4 font-semibold text-sm text-gray-500 mt-2">Academic & Identification</div>
@@ -334,13 +369,39 @@ export default function Students() {
               onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
             />
 
-            <input
-              type="password"
-              className="rounded-lg border border-gray-300 px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 transition-all"
-              placeholder={editing ? 'Password (leave blank to keep)' : 'Password'}
-              value={form.password}
-              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 transition-all pr-10"
+                placeholder={editing ? 'Password (leave blank to keep)' : 'Password'}
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 transition-all pr-10"
+                placeholder={editing ? 'Confirm Password' : 'Confirm Password'}
+                value={form.confirmPassword}
+                onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             <input
               className="rounded-lg border border-gray-300 px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 transition-all"
@@ -377,13 +438,29 @@ export default function Students() {
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
           <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <h3 className="text-xl font-semibold text-gray-800">All Students</h3>
-            <div className="w-full sm:w-80">
-              <input
-                placeholder="Search (name, adm no, aadhar, father...)"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100"
-              />
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="w-full sm:w-64">
+                <input
+                  placeholder="Search..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100"
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <select
+                  value={filterClass}
+                  onChange={(e) => setFilterClass(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100"
+                >
+                  <option value="">All Classes</option>
+                  {classes.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
           {filteredStudents.length === 0 ? (

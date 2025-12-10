@@ -8,6 +8,7 @@ export default function TeacherProgress() {
   const [students, setStudents] = useState([]) // List of students in selected class
   const [loadingStudents, setLoadingStudents] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Exam Details Form
   const [examForm, setExamForm] = useState({
@@ -54,6 +55,7 @@ export default function TeacherProgress() {
         const res = await API.get(`/admin/classes/${examForm.classId}`)
         const studentList = res.data.students || []
         setStudents(studentList)
+        
         // Initialize marks data for new list
         const initialMarks = {}
         studentList.forEach(s => {
@@ -68,6 +70,76 @@ export default function TeacherProgress() {
     }
     loadStudents()
   }, [examForm.classId])
+
+  // Check Attendance Status whenever Date or Class changes
+  useEffect(() => {
+    if (!examForm.classId || !examForm.date || students.length === 0) return
+
+    const checkAttendance = async () => {
+      try {
+        // Fetch attendance for the specific date
+        // API: /attendance/class/:classId?startDate=...&endDate=...
+        const res = await API.get(`/attendance/class/${examForm.classId}`, {
+          params: { startDate: examForm.date, endDate: examForm.date }
+        })
+        
+        const attendanceRecords = res.data || []
+        // Assuming response is array of daily attendance objects. We need the one for this date.
+        // Actually the API returns records matching the range.
+        const recordForDay = attendanceRecords.find(r => 
+           new Date(r.date).toISOString().slice(0, 10) === examForm.date
+        )
+
+        if (recordForDay && recordForDay.records) {
+           setMarksData(prev => {
+              const updated = { ...prev }
+              let changed = false
+              
+              // Map of absent student IDs
+              const absentSet = new Set()
+              recordForDay.records.forEach(r => {
+                 if (r.status === 'absent') absentSet.add(String(r.studentId._id || r.studentId)) 
+              })
+
+              students.forEach(s => {
+                 const isAbsent = absentSet.has(String(s._id))
+                 // Only update if changed to avoid loop/flicker
+                 if (updated[s._id]?.absent !== isAbsent) {
+                    updated[s._id] = { 
+                       ...updated[s._id], 
+                       absent: isAbsent,
+                       // If absent, maybe clear marks? User said "apne aap show ho jae"
+                       marks: isAbsent ? '' : updated[s._id].marks,
+                       remarks: isAbsent ? 'Absent for Exam' : updated[s._id].remarks
+                    }
+                    changed = true
+                 }
+              })
+              
+              return changed ? updated : prev
+           })
+        } else {
+            // No attendance found -> assume all present? Or just don't mark absent automatically.
+            // If user changes date to one with no attendance, we should probably reset absent status?
+            setMarksData(prev => {
+                const updated = { ...prev }
+                let changed = false
+                students.forEach(s => {
+                    if (updated[s._id]?.absent) { // access check was true, now false
+                        updated[s._id] = { ...updated[s._id], absent: false, remarks: '' }
+                        changed = true
+                    }
+                })
+                return changed ? updated : prev
+            })
+        }
+
+      } catch (err) {
+        console.error('Error fetching attendance for cross-check:', err)
+      }
+    }
+    checkAttendance()
+  }, [examForm.date, examForm.classId, students.length])
 
   const handleMarkChange = (studentId, field, value) => {
     setMarksData(prev => ({
@@ -112,7 +184,7 @@ export default function TeacherProgress() {
       const resetMarks = {}
       students.forEach(s => { resetMarks[s._id] = { marks: '', remarks: '', absent: false } })
       setMarksData(resetMarks)
-
+      setRefreshKey(k => k + 1)
     } catch (err) {
       toast.error('Failed to save records')
       console.error(err)
@@ -228,45 +300,45 @@ export default function TeacherProgress() {
                         <th className="px-6 py-3">Roll No</th>
                         <th className="px-6 py-3">Student Name</th>
                         <th className="px-6 py-3 w-32">Marks</th>
-                        <th className="px-6 py-3 w-24">Absent</th>
                         <th className="px-6 py-3">Remarks</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {students.map((s, idx) => (
-                        <tr key={s._id} className="hover:bg-indigo-50/50 transition-colors">
-                          <td className="px-6 py-3 text-gray-500 text-sm">{idx + 1}</td>
-                          <td className="px-6 py-3 text-gray-700 text-sm">{s.rollNumber || '-'}</td>
-                          <td className="px-6 py-3 font-medium text-gray-900">{s.firstName} {s.lastName}</td>
-                          <td className="px-6 py-3">
-                            <input
-                              type="number"
-                              value={marksData[s._id]?.marks || ''}
-                              onChange={e => handleMarkChange(s._id, 'marks', e.target.value)}
-                              disabled={marksData[s._id]?.absent}
-                              className="w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-center disabled:bg-gray-100 disabled:text-gray-400"
-                              placeholder={marksData[s._id]?.absent ? "Ab" : "-"}
-                            />
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <input
-                              type="checkbox"
-                              checked={marksData[s._id]?.absent || false}
-                              onChange={e => handleMarkChange(s._id, 'absent', e.target.checked)}
-                              className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                            />
-                          </td>
-                          <td className="px-6 py-3">
-                            <input
-                              type="text"
-                              value={marksData[s._id]?.remarks || ''}
-                              onChange={e => handleMarkChange(s._id, 'remarks', e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-                              placeholder="Optional remark"
-                            />
-                          </td>
-                        </tr>
-                      ))}
+                      {students.map((s, idx) => {
+                        const isAbsent = marksData[s._id]?.absent || false
+                        return (
+                          <tr key={s._id} className="hover:bg-indigo-50/50 transition-colors">
+                            <td className="px-6 py-3 text-gray-500 text-sm">{idx + 1}</td>
+                            <td className="px-6 py-3 text-gray-700 text-sm">{s.rollNumber || '-'}</td>
+                            <td className="px-6 py-3 font-medium text-gray-900">{s.firstName} {s.lastName}</td>
+                            <td className="px-6 py-3">
+                              {isAbsent ? (
+                                <div className="px-3 py-1.5 bg-red-100 text-red-700 text-sm font-semibold text-center rounded border border-red-200">
+                                  Absent
+                                </div>
+                              ) : (
+                                <input
+                                  type="number"
+                                  value={marksData[s._id]?.marks || ''}
+                                  onChange={e => handleMarkChange(s._id, 'marks', e.target.value)}
+                                  className="w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-center"
+                                  placeholder="-"
+                                />
+                              )}
+                            </td>
+                            <td className="px-6 py-3">
+                              <input
+                                type="text"
+                                value={marksData[s._id]?.remarks || ''}
+                                onChange={e => handleMarkChange(s._id, 'remarks', e.target.value)}
+                                className="w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder={isAbsent ? "Student is absent" : "Optional remark"}
+                                disabled={isAbsent}
+                              />
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -287,7 +359,196 @@ export default function TeacherProgress() {
             </div>
           )}
         </form>
+
+        {/* Existing Marks History */}
+        {examForm.classId && (
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mt-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">Recorded Exams History</h4>
+            <HistoryList classId={examForm.classId} key={refreshKey} />
+          </div>
+        )}
       </div>
     </main>
+  )
+}
+
+// ... (previous code remains same)
+
+function HistoryList({ classId }) {
+  const [summary, setSummary] = useState([])
+  const [selectedExamIndex, setSelectedExamIndex] = useState('') // Store index instead of composite string
+  const [records, setRecords] = useState([])
+  const [loadingSummary, setLoadingSummary] = useState(false)
+  const [loadingRecords, setLoadingRecords] = useState(false)
+  const [search, setSearch] = useState('')
+
+  // Load summary list for dropdown
+  useEffect(() => {
+    setSelectedExamIndex('')
+    setRecords([])
+    const fetchSummary = async () => {
+      setLoadingSummary(true)
+      try {
+        const res = await API.get(`/teacher/progress/summary/${classId}`)
+        setSummary(res.data || [])
+      } catch (err) { console.error(err) }
+      setLoadingSummary(false)
+    }
+    fetchSummary()
+  }, [classId])
+
+  // Load records when exam selected
+  useEffect(() => {
+    if (selectedExamIndex === '') {
+      setRecords([])
+      return
+    }
+    const fetchRecords = async () => {
+      setLoadingRecords(true)
+      try {
+        const examData = summary[selectedExamIndex]
+        if (!examData) return
+
+        const { examName, subject, date } = examData
+        console.log('Fetching records with params:', { classId, examName, subject, date })
+
+        const res = await API.get('/teacher/progress/records', {
+          params: { classId, examName, subject, date }
+        })
+        setRecords(res.data || [])
+      } catch (err) { 
+        console.error('Fetch records error:', err)
+        const msg = err.response?.data?.message || err.message || 'Failed to load exam records'
+        const detail = err.response?.data?.error
+        toast.error(detail ? `${msg}: ${detail}` : msg)
+      }
+      setLoadingRecords(false)
+    }
+    fetchRecords()
+  }, [selectedExamIndex, classId, summary])
+
+  // Filter records
+  const filteredRecords = records.filter(r => {
+    if (!search) return true
+    const s = r.studentId
+    // Allow records even if studentId is missing, unless searching
+    if (!s) return search ? false : true 
+    const str = `${s.firstName} ${s.lastName} ${s.rollNumber}`.toLowerCase()
+    return str.includes(search.toLowerCase())
+  })
+
+  // Format date helpful
+  const formatDate = (d) => new Date(d).toLocaleDateString()
+
+  return (
+    <div className="space-y-4">
+      {/* Controls */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Select Exam</label>
+          <select
+            value={selectedExamIndex}
+            onChange={(e) => setSelectedExamIndex(e.target.value)}
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+          >
+            <option value="">-- Choose an Exam Filter --</option>
+            {summary.map((item, idx) => (
+              <option key={idx} value={idx}>
+                {item.examName} - {item.subject} ({formatDate(item.date)})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Search Student</label>
+          <input
+            type="text"
+            placeholder="Name or Roll No..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            disabled={selectedExamIndex === ''}
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100"
+          />
+        </div>
+      </div>
+
+      {loadingSummary && <div className="text-sm text-gray-500">Loading exams list...</div>}
+
+      {/* Results View */}
+      {selectedExamIndex !== '' && (
+        <div className="border rounded-xl overflow-hidden mt-4">
+          <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+            <h5 className="font-semibold text-gray-700">Exam Results</h5>
+            <span className="text-xs text-gray-500">
+               Showing {filteredRecords.length} / {records.length} students
+            </span>
+          </div>
+          
+          {loadingRecords ? (
+            <div className="p-8 text-center text-gray-500 flex justify-center gap-2">
+                <Loader2 className="animate-spin w-5 h-5"/> Loading records...
+            </div>
+          ) : filteredRecords.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              {records.length === 0 ? (
+                <div>No records found for this exam.</div>
+              ) : search ? (
+                <div>No matching student records found.</div>
+              ) : (
+                <div>No student records available for display.</div>
+              )}
+              <div className="mt-2 text-xs text-gray-400">Showing 0 of {records.length} records returned from server.</div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-white text-gray-600 border-b">
+                  <tr>
+                    <th className="px-4 py-3">Roll No</th>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Marks</th>
+                    <th className="px-4 py-3">Max</th>
+                    <th className="px-4 py-3">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredRecords.map((rec) => {
+                     const st = rec.studentId || {}
+                     return (
+                      <tr key={rec._id} className="hover:bg-indigo-50/30">
+                        <td className="px-4 py-2 font-medium text-gray-700">{st.rollNumber || '-'}</td>
+                        <td className="px-4 py-2 text-gray-900">{st.firstName} {st.lastName}</td>
+                        <td className="px-4 py-2">
+                            {rec.absent ? (
+                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Absent</span>
+                            ) : (
+                                <span className="font-semibold text-indigo-700">{rec.marks}</span>
+                            )}
+                        </td>
+                        <td className="px-4 py-2 text-gray-500">{rec.outOf}</td>
+                        <td className="px-4 py-2 text-gray-500 text-xs italic truncate max-w-xs">{rec.remarks}</td>
+                      </tr>
+                     )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {selectedExamIndex === '' && !loadingSummary && summary.length > 0 && (
+          <div className="text-center py-8 text-gray-400 text-sm">
+            Select an exam above to view student-wise results.
+          </div>
+      )}
+    
+      {selectedExamIndex === '' && !loadingSummary && summary.length === 0 && (
+          <div className="text-center py-8 text-gray-400 text-sm">
+            No exams recorded for this class yet.
+          </div>
+      )}
+    </div>
   )
 }
