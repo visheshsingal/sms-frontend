@@ -136,6 +136,7 @@ export default function App() {
           <Route path='routes' element={<RoutesPage />} />
           {/* Attendance and scanning moved to Admin panel */}
           <Route path='live' element={<LiveTrackingAdmin />} />
+          <Route path='notices' element={<Notices />} />
         </Route>
         <Route path='/notices' element={<Notices />} />
       </Routes>

@@ -8,9 +8,10 @@ export default function Routes() {
   const [students, setStudents] = useState([])
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [activeTab, setActiveTab] = useState('morning')
   
   // validation form state
-  const [form, setForm] = useState({ name: '', startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] })
+  const [form, setForm] = useState({ name: '', type: 'morning', startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] })
 
   const load = async () => {
     try {
@@ -29,12 +30,14 @@ export default function Routes() {
 
   useEffect(() => { load() }, [])
 
-  // Calculate which students are already assigned to OTHER routes to prevent double assignment
+  // Calculate which students are already assigned to OTHER routes to prevent double assignment PER SESSION
   const assignedMap = useMemo(() => {
-    const map = {} // studentId -> routeName
+    const map = { morning: {}, evening: {} } // studentId -> routeName
     routes.forEach(r => {
       // Ignore the route currently being edited (so we don't count existing assignments in the same route as conflicts)
       if (editing && String(r._id) === String(editing._id)) return
+      
+      const rType = r.type || 'morning'
       
       if (r.stops) {
         r.stops.forEach(s => {
@@ -42,7 +45,8 @@ export default function Routes() {
             s.students.forEach(st => {
               // st is populated object, so use st._id
               const sid = st._id ? String(st._id) : String(st)
-              map[sid] = r.name
+              if(rType === 'morning') map.morning[sid] = r.name
+              else map.evening[sid] = r.name
             })
           }
         })
@@ -122,7 +126,7 @@ export default function Routes() {
       } else {
         await API.post('/admin/routes', cleanForm)
       }
-      setForm({ name: '', startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] })
+      setForm({ name: '', type: activeTab, startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] })
       setCreating(false)
       setEditing(null)
       load()
@@ -138,9 +142,15 @@ export default function Routes() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold flex items-center gap-2"><MapPin className="w-6 h-6 text-indigo-600"/> Routes</h2>
-          <button onClick={() => { setEditing(null); setForm({ name: '', startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] }); setCreating(true) }} className="px-4 py-2 bg-indigo-600 text-white rounded">New Route</button>
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+               <h2 className="text-2xl font-semibold flex items-center gap-2"><MapPin className="w-6 h-6 text-indigo-600"/> Routes</h2>
+               <div className="flex bg-gray-200 p-1 rounded-lg">
+                   <button onClick={()=>setActiveTab('morning')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab==='morning' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}>Morning</button>
+                   <button onClick={()=>setActiveTab('evening')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab==='evening' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}>Evening</button>
+               </div>
+          </div>
+          <button onClick={() => { setEditing(null); setForm({ name: '', type: activeTab, startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] }); setCreating(true) }} className="px-4 py-2 bg-indigo-600 text-white rounded">New {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Route</button>
         </div>
 
         {creating && (
@@ -215,8 +225,9 @@ export default function Routes() {
                              if (filtered.length === 0) return <div className="text-xs text-gray-400 text-center py-2">No students found</div>
 
                              return filtered.map(st => {
-                                const assignedRoute = assignedMap[String(st._id)]
-                                const isAssignedOther = !!assignedRoute
+                                const currentType = form.type || 'morning'
+                                const conflictName = currentType === 'morning' ? assignedMap.morning[String(st._id)] : assignedMap.evening[String(st._id)]
+                                const isAssignedOther = !!conflictName
                                 const isChecked = Array.isArray(s.students) && s.students.map(x=>String(x)).includes(String(st._id))
                                 
                                 return (
@@ -232,7 +243,7 @@ export default function Routes() {
                                          <span className="text-sm font-medium text-gray-700">{st.firstName} {st.lastName} <span className="font-normal text-gray-500 text-xs">({st.class?.name || 'No Class'})</span></span>
                                          {isAssignedOther && !isChecked && (
                                             <span className="text-[10px] text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 flex items-center gap-1">
-                                               <AlertCircle className="w-3 h-3"/> In {assignedRoute}
+                                               <AlertCircle className="w-3 h-3"/> In {conflictName}
                                             </span>
                                          )}
                                       </div>
@@ -251,7 +262,7 @@ export default function Routes() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <button type="button" onClick={()=>{ setCreating(false); setEditing(null); setForm({ name: '', startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] }) }} className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+                <button type="button" onClick={()=>{ setCreating(false); setEditing(null); setForm({ name: '', type: activeTab, startTime: '08:00', endTime: '', startLocation: '', bus: '', stops: [] }) }} className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
                 <button type="submit" className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition-colors">{editing ? 'Save Changes' : 'Create Route'}</button>
               </div>
             </form>
@@ -259,7 +270,7 @@ export default function Routes() {
         )}
 
         <div className="grid grid-cols-1 gap-4">
-          {routes.map(r=> (
+          {routes.filter(r => (r.type || 'morning') === activeTab).map(r=> (
             <div key={r._id} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
@@ -300,6 +311,7 @@ export default function Routes() {
                     name: r.name || '',
                     startTime: r.startTime || '08:00',
                     endTime: r.endTime || '',
+                    type: r.type || 'morning',
                     startLocation: r.startLocation || '',
                     bus: r.bus && r.bus._id ? r.bus._id : (r.bus || ''),
                     stops: (r.stops||[]).map(s=>({ 
@@ -316,9 +328,9 @@ export default function Routes() {
               </div>
             </div>
           ))}
-          {routes.length === 0 && !creating && (
+           {routes.filter(r => (r.type||'morning') === activeTab).length === 0 && !creating && (
              <div className="text-center py-12 text-gray-500 bg-white rounded-xl border border-dashed">
-                No routes found. Create one to get started.
+                No {activeTab} routes found. Create one to get started.
              </div>
           )}
         </div>

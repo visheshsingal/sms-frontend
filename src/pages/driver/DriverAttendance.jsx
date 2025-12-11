@@ -33,27 +33,18 @@ export default function DriverAttendance({ session = 'morning' }) {
       }
 
       if (res && res.data) {
-        // driver.me now returns { driver, buses, route }
+        // driver.me now returns { driver, buses }
         const buses = res.data.buses || (res.data.bus ? [res.data.bus] : [])
         setAssignedBuses(buses)
         if (buses.length === 1) {
           const bus = buses[0]
           setSelectedBusId(bus._id)
-          const info = { busId: bus._id, number: bus.number, route: bus.route || res.data.route };
+          const route = session === 'evening' ? bus.eveningRoute : bus.morningRoute
+          const info = { busId: bus._id, number: bus.number, route };
+          // NOTE: We don't manually populate students from route here anymore
+          // We rely on /driver/attendance/students endpoint to get the correct list for the session
           setBusInfo(info)
-
-          const stops = (bus.route && bus.route.stops) ? bus.route.stops : (res.data.route && res.data.route.stops ? res.data.route.stops : [])
-          const list = []
-          for (const stop of stops) {
-            for (const s of (stop.students || [])) {
-              if (!list.find(x => String(x._id) === String(s._id))) list.push(s)
-            }
-          }
-          // Initialize with 'present'
-          const mapped = list.map(s => ({ studentId: s._id, name: `${s.firstName || ''} ${s.lastName || ''}`.trim(), rollNo: s.rollNumber || '', status: 'present' }))
-          setStudents(mapped)
         } else if (buses.length > 1) {
-          // multiple buses assigned; require selection before loading roster
           setBusInfo(null)
           setStudents([])
         } else {
@@ -68,19 +59,24 @@ export default function DriverAttendance({ session = 'morning' }) {
     const busIdToUse = selectedBusId || busInfo?.busId
     if (!busIdToUse) return;
     try {
-      // Fetch existing records for this date/session
+      // First fetch the student list for this session/bus
+      const listRes = await API.get('/driver/attendance/students', { params: { busId: busIdToUse, session } })
+      const roster = listRes.data.students || []
+      
+      // Then fetch existing records for this date/session
       const res = await API.get('/driver/attendance', { params: { date, session, busId: busIdToUse } });
       const records = res.data.records || [];
 
-      if (records.length > 0) {
-        setStudents(prev => prev.map(s => {
-          const r = records.find(rec => String(rec.studentId) === String(s.studentId));
-          return r ? { ...s, status: r.status } : s;
-        }));
-      } else {
-        // Reset to present if no records found for this new date
-        setStudents(prev => prev.map(s => ({ ...s, status: 'present' })));
-      }
+      const mapped = roster.map(s => {
+          const r = records.find(rec => String(rec.studentId) === String(s._id))
+          return {
+             studentId: s._id,
+             name: `${s.firstName || ''} ${s.lastName || ''}`.trim(), 
+             rollNo: s.rollNumber || '', 
+             status: r ? r.status : 'present'
+          }
+      })
+      setStudents(mapped)
     } catch (e) {
       console.error("Failed to load attendance", e);
     }
@@ -117,26 +113,20 @@ export default function DriverAttendance({ session = 'morning' }) {
   // When driver selects a bus (if multiple assigned), load its route/students
   useEffect(() => {
     if (!selectedBusId) return
-    let mounted = true
     const fetchBus = async () => {
       try {
         const res = await API.get(`/admin/buses/${selectedBusId}`)
-        if (!mounted) return
         const bus = res.data
-        const info = { busId: bus._id, number: bus.number, route: bus.route }
+        const route = session === 'evening' ? bus.eveningRoute : bus.morningRoute
+        const info = { busId: bus._id, number: bus.number, route }
         setBusInfo(info)
-        const stops = (bus.route && bus.route.stops) ? bus.route.stops : []
-        const list = []
-        for (const stop of stops) for (const s of (stop.students || [])) if (!list.find(x => String(x._id) === String(s._id))) list.push(s)
-        const mapped = list.map(s => ({ studentId: s._id, name: `${s.firstName || ''} ${s.lastName || ''}`.trim(), rollNo: s.rollNumber || '', status: 'present' }))
-        setStudents(mapped)
+        // loadAttendance will be triggered by selectedBusId
       } catch (err) {
         console.error('Failed loading selected bus info', err)
       }
     }
     fetchBus()
-    return () => { mounted = false }
-  }, [selectedBusId])
+  }, [selectedBusId, session])
 
   return (
     <main className="min-h-screen p-6">
@@ -149,7 +139,10 @@ export default function DriverAttendance({ session = 'morning' }) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Select Bus</label>
                 <select value={selectedBusId} onChange={e => setSelectedBusId(e.target.value)} className="px-3 py-2 border rounded w-full sm:w-64">
                   <option value="">-- Choose Bus --</option>
-                  {assignedBuses.map(b => <option key={b._id} value={b._id}>{b.number} {b.route?.name ? `— ${b.route.name}` : ''}</option>)}
+                  {assignedBuses.map(b => {
+                      const rName = session === 'evening' ? (b.eveningRoute?.name) : (b.morningRoute?.name)
+                      return <option key={b._id} value={b._id}>{b.number} {rName ? `— ${rName}` : ''}</option>
+                  })}
                 </select>
               </div>
             )}

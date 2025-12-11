@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import API from '../utils/api'
 import { Play, Pause, MapPin } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 
 function DriverDashboardInner(){
+  const { selectedBus, driver } = useOutletContext()
   const [data, setData] = useState({ driver: null, bus: null })
   const [isSharing, setIsSharing] = useState(false)
   const [live, setLive] = useState(null)
@@ -13,25 +15,10 @@ function DriverDashboardInner(){
   const pollRef = React.useRef(null)
 
   useEffect(()=>{
-    const load = async ()=>{
-      try{
-        const res = await API.get('/driver/me')
-        const payload = res.data || {}
-        // if bus.route is an id, try to populate it
-        if (payload.bus && payload.bus.route && !(payload.bus.route && payload.bus.route.name)) {
-          try {
-            const routeId = typeof payload.bus.route === 'string' ? payload.bus.route : (payload.bus.route._id || payload.bus.route)
-            if (routeId) {
-              const r = await API.get(`/admin/routes/${routeId}`)
-              payload.bus = { ...payload.bus, route: r.data }
-            }
-          } catch (e) { console.warn('Failed to fetch route for dashboard:', e?.message || e) }
-        }
-        setData(payload)
-      }catch(err){ console.error(err) }
-    }
-    load()
-  }, [])
+      if(selectedBus) {
+          setData({ driver, bus: selectedBus })
+      }
+  }, [selectedBus, driver])
 
   // fetch live info for this bus (and poll when available)
   useEffect(() => {
@@ -56,7 +43,8 @@ function DriverDashboardInner(){
     try {
       // optimistic update so UI moves immediately
       setLive(prev => ({ ...(prev||{}), lastLocation: { lat: Number(lat), lng: Number(lng) }, updatedAt: new Date(), active: true }))
-      await API.post('/driver/ride/location', { lat, lng })
+      setLive(prev => ({ ...(prev||{}), lastLocation: { lat: Number(lat), lng: Number(lng) }, updatedAt: new Date(), active: true }))
+      await API.post('/driver/ride/location', { lat, lng, busId: data.bus?._id })
     } catch (e) {
       console.warn('Failed to send location', e)
     }
@@ -95,7 +83,8 @@ function DriverDashboardInner(){
         try {
           const { latitude: lat, longitude: lng } = pos.coords
           console.log('Starting ride with position', lat, lng)
-          await API.post('/driver/ride/start', { lat, lng })
+          console.log('Starting ride with position', lat, lng)
+          await API.post('/driver/ride/start', { lat, lng, busId: data.bus?._id })
           setIsSharing(true)
           setLive(prev => ({ ...(prev||{}), lastLocation: { lat: Number(lat), lng: Number(lng) }, updatedAt: new Date(), active: true }))
           // start watch
@@ -142,10 +131,7 @@ function DriverDashboardInner(){
       // ensure we have fresh driver->bus info
       let busId = data?.bus?._id || data?.bus?.id
       if (!busId) {
-        const me = await API.get('/driver/me')
-        const payload = me.data || {}
-        setData(payload)
-        busId = payload?.bus?._id || payload?.bus?.id
+           return
       }
       if (!busId) {
         setStartError('No bus assigned to refresh live location')
@@ -158,7 +144,7 @@ function DriverDashboardInner(){
 
   const stopRide = async () => {
     try {
-      await API.post('/driver/ride/stop')
+      await API.post('/driver/ride/stop', { busId: data.bus?._id })
       setIsSharing(false)
       if (watchRef.current != null) { navigator.geolocation.clearWatch(watchRef.current); watchRef.current = null }
       if (pollRef.current != null) { clearInterval(pollRef.current); pollRef.current = null }
@@ -199,7 +185,8 @@ function DriverDashboardInner(){
           {data.bus ? (
             <div className="mt-2 text-sm text-gray-700">
               <div><strong>Number:</strong> {data.bus.number}</div>
-              <div><strong>Route:</strong> {data.bus.route && data.bus.route.name ? data.bus.route.name : (data.bus.route || '—')}</div>
+              {data.bus.morningRoute && (<div><strong>Morning Route:</strong> {data.bus.morningRoute.name}</div>)}
+              {data.bus.eveningRoute && (<div><strong>Evening Route:</strong> {data.bus.eveningRoute.name}</div>)}
               <div><strong>Capacity:</strong> {data.bus.capacity}</div>
               <div className="mt-3">
                 {live && live.active ? (

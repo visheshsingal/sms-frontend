@@ -3,11 +3,13 @@ import API from '../utils/api'
 import { Bus, User, Save, Edit2, Trash2, PlusCircle } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 
-function BusRow({ b, onEdit, onDelete }){
+function BusRow({ b, activeTab, onEdit, onDelete }){
+  const route = activeTab === 'evening' ? b.eveningRoute : b.morningRoute
+  const routeName = route ? route.name : '—'
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white/80 px-4 py-4 shadow-sm transition hover:shadow-md sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-2">
-  <div className="text-lg font-semibold text-gray-900">Bus {b.number} — {b.route && b.route.name ? b.route.name : (b.route || 'No route')}</div>
+  <div className="text-lg font-semibold text-gray-900">Bus {b.number} <span className="text-sm font-normal text-gray-500">({activeTab === 'morning' ? 'Morning' : 'Evening'}: {routeName})</span></div>
         <div className="text-sm text-gray-500">
           Capacity: {b.capacity} • Driver: {b.driver ? `${b.driver.firstName} ${b.driver.lastName}` : 'Unassigned'}
         </div>
@@ -36,6 +38,7 @@ export default function Buses(){
   const [drivers, setDrivers] = useState([])
   const [form, setForm] = useState({ number: '', capacity: 20, driver: '' })
   const [editing, setEditing] = useState(null)
+  const [activeTab, setActiveTab] = useState('morning')
 
   const load = async ()=>{ const res = await API.get('/admin/buses'); setBuses(res.data) }
   const loadDrivers = async ()=>{ try{ const r = await API.get('/admin/drivers'); setDrivers(r.data) }catch(e){ setDrivers([]) } }
@@ -92,8 +95,14 @@ export default function Buses(){
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:p-8">
-          <h3 className="text-xl font-semibold mb-4">All Buses</h3>
-          {buses.length === 0 ? <div className="text-gray-500">No buses yet.</div> : <div className="space-y-3">{buses.map(b=> <BusRow key={b._id} b={b} onEdit={onEdit} onDelete={onDelete} />)}</div>}
+          <div className="flex items-center gap-4 mb-4">
+             <h3 className="text-xl font-semibold">Active Buses</h3>
+             <div className="flex bg-gray-100 p-1 rounded-lg">
+                   <button onClick={()=>setActiveTab('morning')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab==='morning' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}>Morning</button>
+                   <button onClick={()=>setActiveTab('evening')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab==='evening' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}>Evening</button>
+             </div>
+          </div>
+          {buses.length === 0 ? <div className="text-gray-500">No buses yet.</div> : <div className="space-y-3">{buses.map(b=> <BusRow key={b._id} b={b} activeTab={activeTab} onEdit={onEdit} onDelete={onDelete} />)}</div>}
         </div>
       </div>
     </div>

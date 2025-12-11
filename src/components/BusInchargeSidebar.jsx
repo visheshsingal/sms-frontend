@@ -27,7 +27,7 @@ export default function BusInchargeSidebar({ className = '', onClose }) {
     // If notices page exists for bus incharge, we add it. 
     // Checking routes... App.jsx shows <Route path='/notices' element={<Notices />} /> is global.
     // So we can route them there.
-    items.push({ to: '/notices', label: 'Notices', icon: Megaphone, badge: unreadNotices })
+    items.push({ to: '/bus-incharge/notices', label: 'Notices', icon: Megaphone, badge: unreadNotices })
 
 
     const logout = () => {
