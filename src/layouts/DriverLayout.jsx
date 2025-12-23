@@ -106,7 +106,7 @@ export default function DriverLayout() {
                     </header>
 
                     <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-                        <Outlet />
+                        <Outlet context={{ selectedBus: data.bus, driver: data.driver }} />
                     </main>
 
                 </div>
