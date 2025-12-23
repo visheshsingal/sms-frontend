@@ -167,7 +167,7 @@ function DriverDashboardInner(){
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4">Driver Dashboard</h2>
+      <h2 className="text-2xl font-semibold mb-4">Driver Dashboard <span className="text-xs text-gray-400">v1.1</span></h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-lg bg-white shadow">
           <h3 className="font-semibold">Profile</h3>
