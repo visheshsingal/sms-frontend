@@ -5,7 +5,7 @@ import { Play, Pause, MapPin } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 
 function DriverDashboardInner(){
-  const { selectedBus, driver } = useOutletContext()
+  const { selectedBus, driver } = useOutletContext() || {}
   const [data, setData] = useState({ driver: null, bus: null })
   const [isSharing, setIsSharing] = useState(false)
   const [live, setLive] = useState(null)
